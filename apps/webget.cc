@@ -29,9 +29,9 @@ void get_URL(const string &host, const string &path) {
     tcp.write (ostr);
     auto server_send = tcp.read();
     cout << server_send;
-    while (server_send != EOF)
+    while (server_send != -1)
        {
-            auto server_send = tcp.read();
+            server_send = tcp.read();
             cout << server_send;
        }
     
