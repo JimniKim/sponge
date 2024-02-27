@@ -17,7 +17,7 @@ void get_URL(const string &host, const string &path) {
     // (not just one call to read() -- everything) until you reach
     // the "eof" (end of file).
     TCPSocket tcp;
-    Address:: Address addr (host, "http");
+    Address addr (host, "http");
     tcp.connect (addr);
     ostringstream ostr;
     ostr << "telnet " << host << " " << "http" << "\n";
