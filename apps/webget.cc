@@ -19,7 +19,7 @@ void get_URL(const string &host, const string &path) {
     TCPSocket tcp;
     Address addr (host, "http");
     tcp.connect (addr);
-    ostringstream ostr;
+    std:: ostringstream ostr;
     ostr << "telnet " << host << " " << "http" << "\n";
     ostr << "GET "<<path<<" "<<"HTTP/1.1" <<"\r\n";
     ostr <<"HOST: "<< host<<"\r\n";
