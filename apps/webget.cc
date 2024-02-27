@@ -16,6 +16,19 @@ void get_URL(const string &host, const string &path) {
     // Then you'll need to print out everything the server sends back,
     // (not just one call to read() -- everything) until you reach
     // the "eof" (end of file).
+    TCPSocket tcp;
+    Address:: Address addr (host, "http");
+    tcp.connect (addr);
+    ostringstream ostr;
+    ostr << "telnet " << host << " " << "http" << "\n";
+    ostr << "GET "<<path<<" "<<"HTTP/1.1" <<"\r\n";
+    ostr <<"HOST: "<< host<<"\r\n";
+    ostr << "Connection: close" << "\n";
+    ostr << "\r\n";
+    
+    cout << ostr.str() << endl;
+
+
 
     cerr << "Function called: get_URL(" << host << ", " << path << ").\n";
     cerr << "Warning: get_URL() has not been implemented yet.\n";
