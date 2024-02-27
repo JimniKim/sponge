@@ -21,19 +21,20 @@ void get_URL(const string &host, const string &path) {
     Address addr (host, "http");
     tcp.connect (addr);
     std:: ostringstream ostr;
+    string server_send;
     //ostr << "telnet " << host << " " << "http" << "\n";
     ostr << "GET "<<path<<" "<<"HTTP/1.1" <<"\r\n";
     ostr <<"HOST: "<< host<<"\r\n";
     ostr << "Connection: close" << "\n";
     ostr << "\r\n";
     tcp.write (ostr);
-    auto server_send = tcp.read();
+    server_send = tcp.read();
     cout << server_send;
-    while (server_send != -1)
-       {
-            server_send = tcp.read();
-            cout << server_send;
-       }
+    //while (server_send != EOF)
+    //   {
+    //        server_send = tcp.read();
+    //        cout << server_send;
+    //   }
     
     tcp.close();
     //cout << ostr.str() << endl;
