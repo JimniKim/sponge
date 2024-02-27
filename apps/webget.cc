@@ -27,7 +27,7 @@ void get_URL(const string &host, const string &path) {
     ostr <<"HOST: "<< host<<"\r\n";
     ostr << "Connection: close" << "\n";
     ostr << "\r\n";
-    tcp.write (ostr);
+    tcp.write (ostr.str());
     //server_send = tcp.read();
     //cout << server_send;
     cout << tcp.read();
