@@ -31,11 +31,11 @@ void get_URL(const string &host, const string &path) {
     server_send = tcp.read();
     cout << server_send;
     //cout << tcp.read();
-    //while (server_send != EOF)
-    //   {
-    //        server_send = tcp.read();
-    //        cout << server_send;
-    //   }
+    while (!tcp.eof())
+    {
+            server_send = tcp.read();
+            cout << server_send;
+    }
     
     tcp.close();
     //cout << ostr.str() << endl;
