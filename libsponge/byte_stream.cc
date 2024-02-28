@@ -59,6 +59,7 @@ void ByteStream::pop_output(const size_t len)
     buffer << pop_buffer;
     curr_left_size = curr_left_size + len;
     curr_size = stream_capacity - curr_left_size;
+    total_read = total_read + len;
 }
 
 //! Read (i.e., copy and then pop) the next "len" bytes of the stream
@@ -67,7 +68,7 @@ void ByteStream::pop_output(const size_t len)
 std::string ByteStream::read(const size_t len) 
 {
     string read_bytes = peek_output (len);
-    total_read = total_read + read_bytes.size();
+    //total_read = total_read + read_bytes.size();
     pop_output(len);
     return read_bytes;
 }
