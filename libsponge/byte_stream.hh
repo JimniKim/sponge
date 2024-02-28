@@ -20,8 +20,8 @@ class ByteStream {
     size_t stream_capacity;
     size_t total_written;
     size_t total_read;
-    size_t curr_size;
-    size_t curr_left_size;
+    size_t curr_size; //size of written buffer
+    size_t curr_left_size; // remaining size
     bool the_end;
     
     ostringstream buffer;

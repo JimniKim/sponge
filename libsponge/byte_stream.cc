@@ -12,16 +12,9 @@ void DUMMY_CODE(Targs &&... /* unused */) {}
 
 using namespace std;
 
-ByteStream::ByteStream(const size_t capacity) 
-{ 
-    stream_capacity = capacity;
-    total_written =0;
-    total_read =0;
-    curr_size =0; //size of written buffer
-    curr_left_size = capacity; // remaining size
-    the_end = false;
-    
-}
+ByteStream::ByteStream(const size_t capacity) :stream_capacity(capacity),total_read (0),
+total_written(0), curr_left_size (capacity), curr_size(0), the_end (false) {}
+
 
 size_t ByteStream::write(const string &data) 
 {
