@@ -18,8 +18,8 @@ total_read(0), curr_size (0), curr_left_size(capacity), the_end (false),buffer("
 
 size_t ByteStream::write(const string &data) 
 {
-    if (the_end)
-        return 0;
+    //if (the_end)
+    //    return 0;
 
     int curr;
     if (data.size() <= curr_left_size)
@@ -27,11 +27,13 @@ size_t ByteStream::write(const string &data)
         buffer << data;
         curr_left_size = curr_left_size - data.size();
         curr_size = stream_capacity - curr_left_size;
+        total_written = total_written + data.size();
         return data.size();
     }
     else
     {
         buffer << data.substr (0, curr_left_size);
+        total_written = total_written +  curr_left_size;
         curr = curr_left_size;
         curr_left_size = 0;
         curr_size = stream_capacity - curr_left_size;
@@ -68,8 +70,9 @@ std::string ByteStream::read(const size_t len)
 }
 
 void ByteStream::end_input() 
-{
-    the_end = true;
+{   
+    
+        the_end = true;
 }
 
 bool ByteStream::input_ended() const { return the_end; }
