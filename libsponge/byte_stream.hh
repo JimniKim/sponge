@@ -1,8 +1,8 @@
 #ifndef SPONGE_LIBSPONGE_BYTE_STREAM_HH
 #define SPONGE_LIBSPONGE_BYTE_STREAM_HH
 
-#include <string>
 #include <sstream>
+#include <string>
 using namespace std;
 //! \brief An in-order byte stream.
 
@@ -20,13 +20,11 @@ class ByteStream {
     size_t stream_capacity;
     size_t total_written;
     size_t total_read;
-    size_t curr_size; //size of written buffer
-    size_t curr_left_size; // remaining size
+    size_t curr_size;       // size of written buffer
+    size_t curr_left_size;  // remaining size
     bool the_end;
-    
+
     ostringstream buffer;
-
-
 
     bool _error{};  //!< Flag indicating that the stream suffered an error.
 
@@ -49,10 +47,9 @@ class ByteStream {
     void end_input();
 
     //! Indicate that the stream suffered an error.
-    void set_error() 
-    { 
-      if (buffer.bad() || buffer.fail())
-        _error = true;
+    void set_error() {
+        if (buffer.bad() || buffer.fail())
+            _error = true;
     }
     //!@}
 

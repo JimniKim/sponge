@@ -18,29 +18,29 @@ void get_URL(const string &host, const string &path) {
     // (not just one call to read() -- everything) until you reach
     // the "eof" (end of file).
     TCPSocket tcp;
-    Address addr (host, "http");
-    tcp.connect (addr);
-    std:: ostringstream ostr;
+    Address addr(host, "http");
+    tcp.connect(addr);
+    std::ostringstream ostr;
     string server_send;
-    //ostr << "telnet " << host << " " << "http" << "\n";
-    ostr << "GET "<<path<<" "<<"HTTP/1.1" <<"\r\n";
-    ostr <<"HOST: "<< host<<"\r\n";
-    ostr << "Connection: close" << "\n";
+    // ostr << "telnet " << host << " " << "http" << "\n";
+    ostr << "GET " << path << " "
+         << "HTTP/1.1"
+         << "\r\n";
+    ostr << "HOST: " << host << "\r\n";
+    ostr << "Connection: close"
+         << "\n";
     ostr << "\r\n";
-    tcp.write (ostr.str());
+    tcp.write(ostr.str());
     server_send = tcp.read();
     cout << server_send;
-    //cout << tcp.read();
-    while (!tcp.eof())
-    {
-            server_send = tcp.read();
-            cout << server_send;
+    // cout << tcp.read();
+    while (!tcp.eof()) {
+        server_send = tcp.read();
+        cout << server_send;
     }
-    
+
     tcp.close();
-    //cout << ostr.str() << endl;
-
-
+    // cout << ostr.str() << endl;
 
     cerr << "Function called: get_URL(" << host << ", " << path << ").\n";
     cerr << "Warning: get_URL() has not been implemented yet.\n";
