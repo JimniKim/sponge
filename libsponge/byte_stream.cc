@@ -57,7 +57,7 @@ void ByteStream::pop_output(const size_t len)
     buffer.clear();
     buffer.str("");
     buffer << pop_buffer;
-    curr_left_size = curr_left_size + pop_buffer.size();
+    curr_left_size = curr_left_size + len;
     curr_size = stream_capacity - curr_left_size;
 }
 
@@ -74,7 +74,6 @@ std::string ByteStream::read(const size_t len)
 
 void ByteStream::end_input() 
 {   
-    
         the_end = true;
 }
 
