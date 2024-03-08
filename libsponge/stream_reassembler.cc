@@ -46,6 +46,8 @@ void StreamReassembler::push_substring(const string &data, const size_t index, c
     {
         last_byte = new_index;
         _eof = true;
+        if (_data != data)
+            _eof =false;
     }
     
     temp = _data;
