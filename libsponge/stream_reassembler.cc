@@ -34,7 +34,7 @@ void StreamReassembler::push_substring(const string &data, const size_t index, c
         return;
     else if (index >= next)
     {
-        int new_index = index;
+        size_t new_index = index;
         string temp = data;
         
         if (unassem_bytes + data.size () > _capacity)
