@@ -83,10 +83,11 @@ void StreamReassembler::push_substring(const string &data, const size_t index, c
         return;
     else
         {
+            size_t end = next;
             next = next + _output.write (unreassem[next]);
-            if (next == last_byte)
-                _output.end_input();
-            unreassem.erase(next);
+            if (end == last_byte)
+                _output.end_input(); 
+            unreassem.erase(end);
         }
 
 }
