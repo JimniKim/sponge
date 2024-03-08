@@ -22,6 +22,7 @@ class StreamReassembler {
     size_t last_byte; // last_byte of stream
     map <size_t, string> unreassem;
   
+    bool _eof;
     //class를 새로 만들자!! -> index와 data를 같이 저장할 수 있도록!... 일단 고민을 좀 더 해보자ㅏ
 
   public:

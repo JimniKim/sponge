@@ -13,7 +13,7 @@ void DUMMY_CODE(Targs &&... /* unused */) {}
 using namespace std;
 
 StreamReassembler::StreamReassembler(const size_t capacity) : _output(capacity), _capacity(capacity)
-,unassem_bytes(0),next(0), last_byte(0),unreassem() {}
+,unassem_bytes(0),next(0), last_byte(0),unreassem(),_eof(false) {}
 
 //! \details This function accepts a substring (aka a segment) of bytes,
 //! possibly out-of-order, from the logical stream, and assembles any newly
@@ -23,7 +23,11 @@ void StreamReassembler::push_substring(const string &data, const size_t index, c
     
     
     if (eof)
+    {
         last_byte = index;
+        _eof = true;
+    }
+        
 
     
     if (index < next && index+data.size() > next) // partially overlapping
@@ -85,7 +89,7 @@ void StreamReassembler::push_substring(const string &data, const size_t index, c
         {
             size_t end = next;
             next = next + _output.write (unreassem[next]);
-            if (end == last_byte)
+            if (end == last_byte && _eof)
                 _output.end_input(); 
             unreassem.erase(end);
         }
