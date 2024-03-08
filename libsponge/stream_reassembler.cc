@@ -20,7 +20,8 @@ StreamReassembler::StreamReassembler(const size_t capacity) : _output(capacity),
 //! contiguous substrings and writes them into the output stream in order.
 void StreamReassembler::push_substring(const string &data, const size_t index, const bool eof) {
 
-    
+    size_t new_index = index;
+    string temp;
     string _data;
 
     if (eof)
@@ -36,56 +37,57 @@ void StreamReassembler::push_substring(const string &data, const size_t index, c
     
     if (index < next && index+_data.size() > next) // partially overlapping
     {
-        next = next + _output.write(_data.substr(next-index));
-        if (index == last_byte && _eof)
-                _output.end_input(); 
+        _data = _data.substr(next-index);
+        new_index = next;
+        //next = next + _output.write(_data.substr(next-index));
+        //if (index == last_byte && _eof)
+        //        _output.end_input(); 
     }
     else if (index < next && index+_data.size() <= next) // totally overlapping
         return;
-    else if (index >= next)
+    
+    temp = _data;
+   
+    
+    
+    for (auto a = unreassem.begin(); a != unreassem.end();)
     {
-        size_t new_index = index;
-        string temp = _data;
-        
-        
-        for (auto a = unreassem.begin(); a != unreassem.end();)
-        {
-            if (a->first <= new_index && a->first +a->second.size() >= new_index+ temp.size())
-                return;
+        if (a->first <= new_index && a->first +a->second.size() >= new_index+ temp.size())
+            return;
 
-            if (a->first <= new_index &&  new_index <= a->first + a->second.size() &&
-            new_index + temp.size() > a->first + a->second.size() )  
-                {
-                    temp = a->second.substr(0,new_index-a->first) + temp;
-                    unassem_bytes = unassem_bytes - a->second.size();
-                    unreassem.erase(a++);
-                    new_index = a->first;
-                }
-            else if (a->first <=  new_index + temp.size() &&  new_index + temp.size() <= a->first + a->second.size() &&
-            new_index < a->first)
-                {
-                    temp = temp.substr(0,a->first - new_index) + a->second;
-                    new_index = new_index;
-                    if (a-> first == last_byte)
-                        last_byte = new_index;
-                    unassem_bytes = unassem_bytes - a->second.size();
-                    unreassem.erase(a++);
-                }
-            else if (a->first >= new_index && a->first +a->second.size() <= new_index+ temp.size())
+        if (a->first <= new_index &&  new_index <= a->first + a->second.size() &&
+        new_index + temp.size() > a->first + a->second.size() )  
             {
-                temp = temp;
+                temp = a->second.substr(0,new_index-a->first) + temp;
                 unassem_bytes = unassem_bytes - a->second.size();
                 unreassem.erase(a++);
-                new_index = new_index;
+                new_index = a->first;
             }
-            else
-                ++a;
-            
+        else if (a->first <=  new_index + temp.size() &&  new_index + temp.size() <= a->first + a->second.size() &&
+        new_index < a->first)
+            {
+                temp = temp.substr(0,a->first - new_index) + a->second;
+                new_index = new_index;
+                if (a-> first == last_byte)
+                    last_byte = new_index;
+                unassem_bytes = unassem_bytes - a->second.size();
+                unreassem.erase(a++);
+            }
+        else if (a->first >= new_index && a->first +a->second.size() <= new_index+ temp.size())
+        {
+            temp = temp;
+            unassem_bytes = unassem_bytes - a->second.size();
+            unreassem.erase(a++);
+            new_index = new_index;
         }
-        unreassem.insert({new_index,temp});
-        unassem_bytes = unassem_bytes + temp.size();
+        else
+            ++a;
         
     }
+    unreassem.insert({new_index,temp});
+    unassem_bytes = unassem_bytes + temp.size();
+        
+    
 
     if (unreassem.find (next) == unreassem.end())
         return;
