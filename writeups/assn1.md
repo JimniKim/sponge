@@ -23,7 +23,8 @@ exists.]
 Implementation Challenges:
 [As mentioned above, the case of overlapped substring was largely divided into
 three categories, and the problem was when the two cases occurred together.
-Because this case was not considered at first, there was a situation where the strings were less assembled. So after declaring a new string 'temp', I went 
+Because this case was not considered at first, there was a situation where 
+the strings were less assembled. So after declaring a new string 'temp', I went 
 around the for loop and continued to add the combined string to this temp. 
 Later, after the for loop ended, I proceeded to insert this string at once.]
 
