@@ -53,7 +53,7 @@ void StreamReassembler::push_substring(const string &data, const size_t index, c
             if (a->first <= new_index && a->first +a->second.size() >= new_index+ temp.size())
                 return;
 
-            if (a->first <= new_index &&  new_index <= a->first + a->second.size()-1 &&
+            if (a->first <= new_index &&  new_index <= a->first + a->second.size() &&
             new_index + temp.size() > a->first + a->second.size() )  
                 {
                     temp = a->second.substr(0,new_index-a->first) + temp;
@@ -61,7 +61,7 @@ void StreamReassembler::push_substring(const string &data, const size_t index, c
                     unreassem.erase(a++);
                     new_index = a->first;
                 }
-            else if (a->first <=  new_index + temp.size()-1 &&  new_index + temp.size()-1 <= a->first + a->second.size()-1 &&
+            else if (a->first <=  new_index + temp.size() &&  new_index + temp.size() <= a->first + a->second.size() &&
             new_index < a->first)
                 {
                     temp = temp.substr(0,a->first - new_index) + a->second;
