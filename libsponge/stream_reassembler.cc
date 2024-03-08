@@ -13,7 +13,7 @@ void DUMMY_CODE(Targs &&... /* unused */) {}
 using namespace std;
 
 StreamReassembler::StreamReassembler(const size_t capacity) : _output(capacity), _capacity(capacity)
-,unassem_bytes(0),next(0), last_byte(0),unreassem(),_eof(false) {}
+,unassem_bytes(0), next(0), last_byte(0),unreassem(),_eof(false) {}
 
 //! \details This function accepts a substring (aka a segment) of bytes,
 //! possibly out-of-order, from the logical stream, and assembles any newly
@@ -21,34 +21,36 @@ StreamReassembler::StreamReassembler(const size_t capacity) : _output(capacity),
 void StreamReassembler::push_substring(const string &data, const size_t index, const bool eof) {
 
     
-    
+    string _data;
+
     if (eof)
     {
         last_byte = index;
         _eof = true;
     }
         
-
+    if (index < next + _output.remaining_capacity())
+        _data = data.substr(0,min(data.size(), next + _output.remaining_capacity()-index));
+    else
+        return;
     
-    if (index < next && index+data.size() > next) // partially overlapping
+    if (index < next && index+_data.size() > next) // partially overlapping
     {
-        next = next + _output.write(data.substr(next-index));
+        next = next + _output.write(_data.substr(next-index));
         if (index == last_byte && _eof)
                 _output.end_input(); 
     }
-    else if (index < next && index+data.size() <= next) // totally overlapping
+    else if (index < next && index+_data.size() <= next) // totally overlapping
         return;
     else if (index >= next)
     {
         size_t new_index = index;
-        string temp = data;
+        string temp = _data;
         
-        if (unassem_bytes + data.size () > _capacity)
-            temp = data.substr(0,_capacity - unassem_bytes);
         
         for (auto a = unreassem.begin(); a != unreassem.end();)
         {
-            if (a->first >= new_index && a->first +a->second.size() >= new_index+ temp.size())
+            if (a->first <= new_index && a->first +a->second.size() >= new_index+ temp.size())
                 return;
 
             if (a->first <= new_index &&  new_index <= a->first + a->second.size()-1 &&
@@ -69,7 +71,7 @@ void StreamReassembler::push_substring(const string &data, const size_t index, c
                     unassem_bytes = unassem_bytes - a->second.size();
                     unreassem.erase(a++);
                 }
-            else if (a->first <= new_index && a->first +a->second.size() <= new_index+ temp.size())
+            else if (a->first >= new_index && a->first +a->second.size() <= new_index+ temp.size())
             {
                 temp = temp;
                 unassem_bytes = unassem_bytes - a->second.size();

@@ -17,7 +17,6 @@ class StreamReassembler {
     size_t _capacity;    //!< The maximum number of bytes
 
     size_t unassem_bytes;
-    
     size_t next; // next start index of stream
     size_t last_byte; // last_byte of stream
     map <size_t, string> unreassem;
