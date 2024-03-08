@@ -91,6 +91,7 @@ void StreamReassembler::push_substring(const string &data, const size_t index, c
         {
             size_t end = next;
             next = next + _output.write (unreassem[next]);
+            unassem_bytes = unassem_bytes - unreassem[next].size();
             if (end == last_byte && _eof)
                 _output.end_input(); 
             unreassem.erase(end);
