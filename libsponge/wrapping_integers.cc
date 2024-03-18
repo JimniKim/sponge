@@ -35,9 +35,9 @@ uint64_t unwrap(WrappingInt32 n, WrappingInt32 isn, uint64_t checkpoint) {
     uint64_t temp = (n.raw_value() + P2_32* wrapped -isn.raw_value());
     uint64_t chp_re = checkpoint % P2_32;
     uint64_t chp_q = checkpoint - chp_re;
+    uint64_t differ = temp > chp_re ? temp - chp_re: chp_re - temp;
     
-    
-    if (abs (static_cast<int64_t>(temp - chp_re)) < (P2_32/2))
+    if (differ < (P2_32/2))
         temp = temp + chp_q;
     else if (temp > chp_re)
         temp = temp + chp_q + P2_32;
