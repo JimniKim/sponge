@@ -31,7 +31,7 @@ WrappingInt32 wrap(uint64_t n, WrappingInt32 isn) {
 //! has a different ISN.
 uint64_t unwrap(WrappingInt32 n, WrappingInt32 isn, uint64_t checkpoint) {
     bool wrapped = (n.raw_value() < isn.raw_value());
-    uint64_t a = 1<<32;
+    uint64_t a = static_cast<int64_t>(1)<<32;
     uint64_t temp = (n.raw_value() + a* wrapped -isn.raw_value());
     uint64_t chp_re = checkpoint % a;
     uint64_t chp_q = checkpoint - chp_re;
