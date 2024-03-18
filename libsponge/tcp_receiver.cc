@@ -16,13 +16,15 @@ void TCPReceiver::segment_received(const TCPSegment &seg) {
     {
         isn = seg.header().seqno;
         syn = true;
+        _reassembler.push_substring("S", 0 ,fin);
     }
-    
+    string data = string(seg.payload().str());
     if (seg.header().fin)
     {
         fin = true;
+        data = data + "F";
     }
-    _reassembler.push_substring(string(seg.payload().str()), unwrap(seg.header().seqno, isn, _reassembler.stream_out().bytes_written()+1) ,fin);
+    _reassembler.push_substring(data, unwrap(seg.header().seqno, isn, _reassembler.stream_out().bytes_written()+1) ,fin);
     
 }
 
