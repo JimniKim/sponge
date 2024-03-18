@@ -4,7 +4,7 @@
 
 // For Lab 2, please replace with a real implementation that passes the
 // automated checks run by `make check_lab2`.
-#define P2_32 static_cast<uint32_t>(1U << 32U)
+#define P2_32 static_cast<uint64_t>(1ULL << 32ULL)
 template <typename... Targs>
 void DUMMY_CODE(Targs &&... /* unused */) {}
 
