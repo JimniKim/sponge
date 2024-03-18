@@ -31,17 +31,18 @@ WrappingInt32 wrap(uint64_t n, WrappingInt32 isn) {
 //! has a different ISN.
 uint64_t unwrap(WrappingInt32 n, WrappingInt32 isn, uint64_t checkpoint) {
     bool wrapped = (n.raw_value() < isn.raw_value());
-    uint64_t temp = (n.raw_value() + (1ULL<<32)* wrapped -isn.raw_value());
-    uint64_t chp_re = checkpoint % (1ULL<<32);
+    uint64_t a = 1<<32;
+    uint64_t temp = (n.raw_value() + a* wrapped -isn.raw_value());
+    uint64_t chp_re = checkpoint % a;
     uint64_t chp_q = checkpoint - chp_re;
     
     
-    if (abs (static_cast<int64_t>(temp - chp_re)) < (1ULL<<22))
+    if (abs (static_cast<int64_t>(temp - chp_re)) < (a/2))
         temp = temp + chp_q;
     else if (temp > chp_re)
-        temp = temp + chp_q + (1ULL<<32);
+        temp = temp + chp_q + a;
     else 
-        temp = temp + chp_q - (1ULL<<32)*(chp_q != 0);
+        temp = temp + chp_q - a*(chp_q != 0);
 
 
     return temp;
