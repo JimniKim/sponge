@@ -22,7 +22,7 @@ void TCPReceiver::segment_received(const TCPSegment &seg) {
     if (seg.header().fin)
     {
         fin = true;
-        abs_seq_fin = unwrap(seg.header().seqno+length_in_sequence_space()-1, isn, _reassembler.stream_out().bytes_written());
+        abs_seq_fin = unwrap(seg.header().seqno+ seg.length_in_sequence_space()-1, isn, _reassembler.stream_out().bytes_written());
         //data = data + "F";
     }
     _reassembler.push_substring(data, unwrap(seg.header().seqno, isn, _reassembler.stream_out().bytes_written()) ,fin);
