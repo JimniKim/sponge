@@ -24,13 +24,13 @@ void TCPReceiver::segment_received(const TCPSegment &seg) {
         fin = true;
         data = data + "F";
     }
-    _reassembler.push_substring(data, unwrap(seg.header().seqno, isn, _reassembler.stream_out().bytes_written()+1) ,fin);
+    _reassembler.push_substring(data, unwrap(seg.header().seqno, isn, _reassembler.stream_out().bytes_written()) ,fin);
     
 }
 
 optional<WrappingInt32> TCPReceiver::ackno() const 
 { 
-    uint64_t n = _reassembler.stream_out().bytes_written()+1;
+    uint64_t n = _reassembler.stream_out().bytes_written();
     if (syn) 
     {
         if (fin && _reassembler.unassembled_bytes())
