@@ -26,6 +26,6 @@ void TCPReceiver::segment_received(const TCPSegment &seg) {
     
 }
 
-optional<WrappingInt32> TCPReceiver::ackno() const { return wrap(_reassembler.stream_out().bytes_written()+1, isn) if (syn) }
+optional<WrappingInt32> TCPReceiver::ackno() const { return wrap(_reassembler.stream_out().bytes_written()+1, isn) if (syn); }
 
 size_t TCPReceiver::window_size() const { return _reassembler.stream_out().remaining_capacity(); }
