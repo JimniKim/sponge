@@ -14,9 +14,8 @@ using namespace std;
 //! \param n The input absolute 64-bit sequence number
 //! \param isn The initial sequence number
 WrappingInt32 wrap(uint64_t n, WrappingInt32 isn) {
-    uint32_t temp = (n + isn.raw_value()) % P2_32; //Check whether using operator+ is okay.
-
-    return WrappingInt32{temp};
+    //Check whether using operator+ is okay.
+    return WrappingInt32{(n + isn.raw_value()) % P2_32};
 }
 
 //! Transform a WrappingInt32 into an "absolute" 64-bit sequence number (zero-indexed)
