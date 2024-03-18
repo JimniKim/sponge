@@ -4,7 +4,7 @@
 
 // For Lab 2, please replace with a real implementation that passes the
 // automated checks run by `make check_lab2`.
-
+#define P2_32 static_cast<uint32_t>(1U << 32U)
 template <typename... Targs>
 void DUMMY_CODE(Targs &&... /* unused */) {}
 
@@ -14,7 +14,7 @@ using namespace std;
 //! \param n The input absolute 64-bit sequence number
 //! \param isn The initial sequence number
 WrappingInt32 wrap(uint64_t n, WrappingInt32 isn) {
-    uint32_t temp = (n + isn.raw_value()) % (1<<32); //Check whether using operator+ is okay.
+    uint32_t temp = (n + isn.raw_value()) % P2_32; //Check whether using operator+ is okay.
 
     return WrappingInt32{temp};
 }
@@ -31,18 +31,18 @@ WrappingInt32 wrap(uint64_t n, WrappingInt32 isn) {
 //! has a different ISN.
 uint64_t unwrap(WrappingInt32 n, WrappingInt32 isn, uint64_t checkpoint) {
     bool wrapped = (n.raw_value() < isn.raw_value());
-    uint64_t a = static_cast<int64_t>(1)<<32;
-    uint64_t temp = (n.raw_value() + a* wrapped -isn.raw_value());
-    uint64_t chp_re = checkpoint % a;
+    //uint64_t a = static_cast<int64_t>(1)<<32;
+    uint64_t temp = (n.raw_value() + P2_32* wrapped -isn.raw_value());
+    uint64_t chp_re = checkpoint % P2_32;
     uint64_t chp_q = checkpoint - chp_re;
     
     
-    if (abs (static_cast<int64_t>(temp - chp_re)) < (a/2))
+    if (abs (static_cast<int64_t>(temp - chp_re)) < (P2_32/2))
         temp = temp + chp_q;
     else if (temp > chp_re)
-        temp = temp + chp_q + a;
+        temp = temp + chp_q + P2_32;
     else 
-        temp = temp + chp_q - a*(chp_q != 0);
+        temp = temp + chp_q - P2_32*(chp_q != 0);
 
 
     return temp;
