@@ -40,9 +40,9 @@ uint64_t unwrap(WrappingInt32 n, WrappingInt32 isn, uint64_t checkpoint) {
     if (differ < (P2_32/2))
         temp = temp + chp_q;
     else if (temp > chp_re)
-        temp = temp + chp_q + P2_32;
-    else 
         temp = temp + chp_q - P2_32*(chp_q != 0);
+    else 
+        temp = temp + chp_q + P2_32;
 
 
     return temp;
