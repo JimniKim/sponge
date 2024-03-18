@@ -30,10 +30,10 @@ void TCPReceiver::segment_received(const TCPSegment &seg) {
 
 optional<WrappingInt32> TCPReceiver::ackno() const 
 { 
-    uint64_t n = _reassembler.stream_out().bytes_written();
+    uint64_t n = _reassembler.stream_out().bytes_written()+1;
     if (syn) 
     {
-        if (fin && _reassembler.unassembled_bytes())
+        if (fin && _reassembler.unassembled_bytes()==0)
             n = n+1;
 
         return wrap(n , isn);
