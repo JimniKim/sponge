@@ -20,19 +20,56 @@ using namespace std;
 TCPSender::TCPSender(const size_t capacity, const uint16_t retx_timeout, const std::optional<WrappingInt32> fixed_isn)
     : _isn(fixed_isn.value_or(WrappingInt32{random_device()()}))
     , _initial_retransmission_timeout{retx_timeout}
-    , _stream(capacity) {}
+    , _stream(capacity)
+    , _window_size (0)
+    , _ackno(wrap(1,_isn).raw_value())
+    , consecutive_retran(0) {}
 
-uint64_t TCPSender::bytes_in_flight() const { return {}; }
+uint64_t TCPSender::bytes_in_flight() const 
+{ 
+     std::queue<TCPSegment> copy_seg =  outstanding_seg;
+    uint64_t count = 0;
+    for (int i =0; i < outstanding_seg.size(); i++)
+        count = count + outstanding_seg[i].length_in_sequence_space();
+    return count;
+}
 
-void TCPSender::fill_window() {}
+void TCPSender::fill_window() 
+{
+    string new_string = _stream.read( _window_size);
+    uint16_t num =  new_string.size(); 
+    while (string.size()!= 0)
+    {
+        num = min(TCPConfig::MAX_PAYLOAD_SIZE, new_string.size());
+        TCPSegment new_seg;
+        new_seg.payload(new_string.substr(0, num));
+        new_string = new_string.substr(num);
+        outstanding_seg.push_back(new_seg);
+    }
+}
 
 //! \param ackno The remote receiver's ackno (acknowledgment number)
 //! \param window_size The remote receiver's advertised window size
-void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_size) { DUMMY_CODE(ackno, window_size); }
+void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_size) 
+{
+    _window_size = window_size;
+    _ackno = ackno.raw_value();
+    outstanding_seg.pop_front();
+}
 
 //! \param[in] ms_since_last_tick the number of milliseconds since the last call to this method
-void TCPSender::tick(const size_t ms_since_last_tick) { DUMMY_CODE(ms_since_last_tick); }
+void TCPSender::tick(const size_t ms_since_last_tick) 
+{
+    if (ms_since_last_tick > _initial_retransmission_timeout)
 
-unsigned int TCPSender::consecutive_retransmissions() const { return {}; }
 
-void TCPSender::send_empty_segment() {}
+}
+
+unsigned int TCPSender::consecutive_retransmissions() const {return consecutive_retran}
+
+void TCPSender::send_empty_segment() 
+{
+    TCPSegment new_seg;
+    new_seg.header().seqno = _ackno;
+    _segments_out.push(new_seg);
+}

@@ -8,6 +8,7 @@
 
 #include <functional>
 #include <queue>
+#include <deque>
 
 //! \brief The "sender" part of a TCP implementation.
 
@@ -31,6 +32,11 @@ class TCPSender {
 
     //! the (absolute) sequence number for the next byte to be sent
     uint64_t _next_seqno{0};
+
+    std::deque<TCPSegment> outstanding_seg{}; //store outstanding segments
+    uint16_t _window_size;
+    uint32_t _ackno;
+    unsigned int consecutive_retran;
 
   public:
     //! Initialize a TCPSender
