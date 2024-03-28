@@ -39,7 +39,7 @@ uint64_t TCPSender::bytes_in_flight() const
 void TCPSender::fill_window() 
 {
     
-    uint16_t num = _window_size;
+    long unsigned int num = _window_size;
 
     if (_window_size==0)
         send_empty_segment();
