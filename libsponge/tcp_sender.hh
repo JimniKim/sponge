@@ -40,6 +40,7 @@ class TCPSender {
     uint32_t seq;
     unsigned int rto;
     bool timer;
+    bool start;
 
   public:
     //! Initialize a TCPSender
