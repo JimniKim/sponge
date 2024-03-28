@@ -62,7 +62,7 @@ void TCPSender::fill_window()
 
         num = num-new_seg.header().syn;
 
-        if (_stream.buffer_size()<= num && _stream.buffer_size()<= (TCPConfig::MAX_PAYLOAD_SIZE - new_seg.header().syn))
+        if (_stream.buffer_size()<= num && _stream.buffer_size()<= (TCPConfig::MAX_PAYLOAD_SIZE - new_seg.header().syn) && _stream.input_ended())
             new_seg.header().fin = true;
         
         num = num - new_seg.header().fin;
