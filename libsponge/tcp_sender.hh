@@ -9,7 +9,6 @@
 #include <functional>
 #include <queue>
 #include <deque>
-#include <algorithm>
 
 //! \brief The "sender" part of a TCP implementation.
 
