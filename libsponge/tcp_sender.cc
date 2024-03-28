@@ -82,8 +82,17 @@ void TCPSender::fill_window()
         last_abs = last_abs + new_seg.length_in_sequence_space();
         num = num - new_seg.payload().str().size();
 
-        timer = true;
+        if (!outstanding_seg.empty())
+        {
+            rto = _initial_retransmission_timeout;
+            time_passed =0;
+        }
+        
     }
+
+
+
+
 }
 
 //! \param ackno The remote receiver's ackno (acknowledgment number)
