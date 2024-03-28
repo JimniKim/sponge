@@ -37,6 +37,9 @@ class TCPSender {
     uint16_t _window_size;
     uint32_t _ackno;
     unsigned int consecutive_retran;
+    uint32_t seq;
+    unsigned int rto;
+    bool timer;
 
   public:
     //! Initialize a TCPSender
