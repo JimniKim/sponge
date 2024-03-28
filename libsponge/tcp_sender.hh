@@ -33,14 +33,16 @@ class TCPSender {
     //! the (absolute) sequence number for the next byte to be sent
     uint64_t _next_seqno{0};
 
-    std::deque<TCPSegment> outstanding_seg{}; //store outstanding segments
+    map<uint64_t, TCPSegment> outstanding_seg{}; //store outstanding segments
     uint16_t _window_size;
     uint32_t _ackno;
     unsigned int consecutive_retran;
     uint32_t seq;
     unsigned int rto;
+    unsigned int time_passed;
     bool timer;
     bool start;
+    uint64_t last_abs;
 
   public:
     //! Initialize a TCPSender
