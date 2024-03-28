@@ -126,9 +126,9 @@ unsigned int TCPSender::consecutive_retransmissions() const {return consecutive_
 void TCPSender::send_empty_segment() 
 {
     TCPSegment new_seg;
-    new_seg.header().seqno = WrappingInt32(_ackno);
+    new_seg.header().seqno = WrappingInt32(seq);
     if (start == false)
-        new_seg.header().syn = true;
+            new_seg.header().syn = true;
     start = true;
     _segments_out.push(new_seg);
 }
