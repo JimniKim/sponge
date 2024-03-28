@@ -35,7 +35,7 @@ uint64_t TCPSender::bytes_in_flight() const
 { 
     uint64_t count = 0;
     for (auto i = outstanding_seg.begin(); i != outstanding_seg.end(); i++)
-        count = count + (*i).length_in_sequence_space();
+        count = count + i->second.length_in_sequence_space();
     return count;
 }
 
