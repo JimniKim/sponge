@@ -44,7 +44,7 @@ void TCPSender::fill_window()
     if (_window_size==0)
         send_empty_segment();
 
-    while (!(_stream.empty()|| num==0))
+    while (!(_stream.buffer_empty()|| num==0))
     {
         TCPSegment new_seg;
 
@@ -77,7 +77,7 @@ void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
     _ackno = ackno.raw_value();
     rto = _initial_retransmission_timeout;
     consecutive_retran =0;
-    
+
     if (!outstanding_seg.empty())
         timer = true;
 
@@ -115,11 +115,11 @@ void TCPSender::tick(const size_t ms_since_last_tick)
 
 }
 
-unsigned int TCPSender::consecutive_retransmissions() const {return consecutive_retran}
+unsigned int TCPSender::consecutive_retransmissions() const {return consecutive_retran;}
 
 void TCPSender::send_empty_segment() 
 {
     TCPSegment new_seg;
-    new_seg.header().seqno = _ackno;
+    new_seg.header().seqno = WrappingInt32(_ackno);
     _segments_out.push(new_seg);
 }
