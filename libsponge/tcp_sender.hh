@@ -8,7 +8,7 @@
 
 #include <functional>
 #include <queue>
-#include <deque>
+#include <map>
 
 //! \brief The "sender" part of a TCP implementation.
 
