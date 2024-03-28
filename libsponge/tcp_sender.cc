@@ -42,7 +42,7 @@ void TCPSender::fill_window()
     
     long unsigned int num = _window_size;
 
-    if (_window_size==0)
+    if (_window_size==0 || _stream.buffer_empty())
         send_empty_segment();
 
     while (!(_stream.buffer_empty()|| num==0))
