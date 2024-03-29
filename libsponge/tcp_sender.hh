@@ -35,7 +35,7 @@ class TCPSender {
 
     map<uint64_t, TCPSegment> outstanding_seg{}; //store outstanding segments
     size_t _window_size;
-    uint32_t _ackno;
+    WrappingInt32 _ackno;
     unsigned int consecutive_retran;
     uint32_t seq;
     unsigned int rto;

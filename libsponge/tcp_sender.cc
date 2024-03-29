@@ -42,12 +42,14 @@ uint64_t TCPSender::bytes_in_flight() const
 void TCPSender::fill_window() 
 {
     
-    size_t num = _window_size;
+    size_t win = _window_size;
+    size_t num =0;
+    uint64_t abs_possible = unwrap(_ackno,_isn, _next_seqno) + _window_size;
 
     if (_window_size == 0)
-        num = 1;
+        win = 1;
 
-    while (num > 0 && _fin == false)
+    while (abs_possible > _next_seqno && _fin == false)
     {
         TCPSegment new_seg;
 
@@ -60,7 +62,7 @@ void TCPSender::fill_window()
                 
          new_seg.header().seqno = wrap(_next_seqno, _isn);
 
-        num = num-new_seg.header().syn;
+        num = abs_possible - _next_seqno - new_seg.header().syn;
 
        
 
@@ -68,7 +70,7 @@ void TCPSender::fill_window()
         new_seg.payload() = Buffer (_stream.read(min_num)); 
         num = num - min_num;
 
-         if (num  > 0   && _stream.eof())
+         if (num > 0 && _stream.buffer_empty() && _stream.eof())
             {
                 new_seg.header().fin = true;
                 _fin = true;
@@ -108,12 +110,12 @@ void TCPSender::fill_window()
 void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_size) 
 {
     
-    if (seq < ackno.raw_value() || ackno.raw_value() <= _ackno)
+    if (seq < ackno.raw_value() || ackno.raw_value() <= _ackno.raw_value())
         return;
     
 
     _window_size = window_size;
-    _ackno = ackno.raw_value();
+    _ackno = ackno;
 
     rto = _initial_retransmission_timeout;
     consecutive_retran =0;
