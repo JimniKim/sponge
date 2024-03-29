@@ -80,7 +80,7 @@ void TCPSender::fill_window()
         }
             
 
-        //seq = seq + new_seg.length_in_sequence_space();
+        seq = seq + new_seg.length_in_sequence_space();
         _next_seqno = _next_seqno + new_seg.length_in_sequence_space();
         //num = num - new_seg.payload().str().size();
 
@@ -104,6 +104,9 @@ void TCPSender::fill_window()
 void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_size) 
 {
     
+    if (seq != ackno.raw_value())
+        return;
+
     _window_size = window_size;
     _ackno = ackno.raw_value();
 
@@ -116,7 +119,7 @@ void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
 
     for (auto i = outstanding_seg.begin(); i != outstanding_seg.end();)
     {
-        if (i->first +i->second.length_in_sequence_space() <= unwrap (ackno, _isn, _next_seqno) )
+        if (i->first +i->second.length_in_sequence_space() <= unwrap (ackno, _isn, _next_seqno))
             i = outstanding_seg.erase(i);
         else
             ++i;
