@@ -47,15 +47,15 @@ void TCPSender::fill_window()
     if (_window_size == 0)
         num = 1;
 
-    while (num!=0)
+    while (num!=0 )
     {
         TCPSegment new_seg;
 
         if (start == false)
-            {
-                new_seg.header().syn =true;
-                start = true;
-            }
+        {
+            new_seg.header().syn =true;
+            start = true;
+        }
 
                 
          new_seg.header().seqno = wrap(last_abs, _isn);
@@ -88,6 +88,8 @@ void TCPSender::fill_window()
             time_passed =0;
         }
         
+        if (_stream.buffer_empty())
+            break;
     }
 
 
