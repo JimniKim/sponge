@@ -43,7 +43,6 @@ void TCPSender::fill_window()
 {
     
     size_t num = _window_size? _window_size - bytes_in_flight(): 1;
-    //uint64_t abs_possible = unwrap(_ackno,_isn, _next_seqno) + _window_size;
 
 
     while (num > 0 && _fin == false)
@@ -85,7 +84,6 @@ void TCPSender::fill_window()
 
         seq = seq + new_seg.length_in_sequence_space();
         _next_seqno = _next_seqno + new_seg.length_in_sequence_space();
-        //num = num - new_seg.payload().str().size();
 
         if (outstanding_seg.empty())
         {
@@ -106,13 +104,17 @@ void TCPSender::fill_window()
 //! \param window_size The remote receiver's advertised window size
 void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_size) 
 {
-    
     if (seq < ackno.raw_value() || ackno.raw_value() <= _ackno.raw_value())
-        return;
-    
+    {
+        if (ackno.raw_value() == _ackno.raw_value())
+        {
+            _window_size = window_size;
+            _ackno = ackno;
 
-    _window_size = window_size;
-    _ackno = ackno;
+        }
+        return;
+    }
+        
 
     rto = _initial_retransmission_timeout;
     consecutive_retran =0;
