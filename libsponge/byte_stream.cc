@@ -46,11 +46,6 @@ size_t ByteStream::write(const string &data) {
 string ByteStream::peek_output(const size_t len) const {
     string copy_buffer = buffer.str();
     string peek = copy_buffer.substr(0, len);
-
-    curr_left_size = curr_left_size + peek.size();
-    curr_size = stream_capacity - curr_left_size;
-    total_read = total_read + peek.size();
-
     return peek;
 }
 
@@ -61,6 +56,9 @@ void ByteStream::pop_output(const size_t len) {
     buffer.clear();
     buffer.str("");
     buffer << pop_buffer;
+    curr_left_size = curr_left_size + a;
+    curr_size = stream_capacity - curr_left_size;
+    total_read = total_read + a;
     
 }
 
