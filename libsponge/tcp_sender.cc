@@ -65,7 +65,7 @@ void TCPSender::fill_window()
         new_seg.payload() = Buffer (move(payload_read)); 
         
 
-        if (_stream.eof() && (( payload_read.size() + bytes_in_flight()) < _window_size)&& (payload_read.size() != curr_win))
+        if (_fin == false && _stream.eof() && (( payload_read.size() + bytes_in_flight()) < _window_size)&& (payload_read.size() != _window_size))
         {
             new_seg.header().fin = true;
             _fin = true;
