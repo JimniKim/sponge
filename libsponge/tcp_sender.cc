@@ -45,18 +45,20 @@ void TCPSender::fill_window()
 
     while (num > 0 && _fin == false)
     {
+        num = _window_size - bytes_in_flight()? _window_size - bytes_in_flight(): 1;
         TCPSegment new_seg;
 
         if (start == false)
         {
             new_seg.header().syn =true;
             start = true;
+            num = num -1;
         }
 
                 
          new_seg.header().seqno = wrap(_next_seqno, _isn);
 
-        num = num - new_seg.header().syn;
+        //num = num - new_seg.header().syn;
         
 
         if (_stream.input_ended())
