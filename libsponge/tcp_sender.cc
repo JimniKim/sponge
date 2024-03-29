@@ -42,8 +42,8 @@ uint64_t TCPSender::bytes_in_flight() const
 void TCPSender::fill_window() 
 {
     
-    size_t num = _window_size? _window_size : 1;
-
+    size_t num = _window_size? _window_size - bytes_in_flight(): 1;
+    size_t curr_win = _window_size? _window_size - bytes_in_flight(): 1;
 
     while (num > 0 && _fin == false)
     {
@@ -67,11 +67,11 @@ void TCPSender::fill_window()
         new_seg.payload() = Buffer (move(payload_read)); 
         
 
-         if (_stream.eof() && (( payload_read.size() + bytes_in_flight()) < _window_size)&& (min_num != num))
-            {
-                new_seg.header().fin = true;
-                _fin = true;
-            }
+        if (_stream.eof() && (( payload_read.size() + bytes_in_flight()) < _window_size)&& (payload_read.size() != curr_win))
+        {
+            new_seg.header().fin = true;
+            _fin = true;
+        }
         
        num = num - new_seg.payload().str().size();
         
