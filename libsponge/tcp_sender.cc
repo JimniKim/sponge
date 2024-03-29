@@ -106,12 +106,6 @@ void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
 {
     if (seq < ackno.raw_value() || ackno.raw_value() <= _ackno.raw_value())
     {
-        if (ackno.raw_value() == _ackno.raw_value())
-        {
-            _window_size = window_size;
-            _ackno = ackno;
-
-        }
         return;
     }
         
