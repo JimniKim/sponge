@@ -84,7 +84,7 @@ void TCPSender::fill_window()
         _next_seqno = _next_seqno + new_seg.length_in_sequence_space();
         //num = num - new_seg.payload().str().size();
 
-        if (!outstanding_seg.empty())
+        if (outstanding_seg.empty())
         {
             rto = _initial_retransmission_timeout;
             time_passed =0;
@@ -114,7 +114,7 @@ void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
     consecutive_retran =0;
     time_passed =0;
 
-    if (!outstanding_seg.empty())
+    if (outstanding_seg.empty())
         timer = true;
 
     for (auto i = outstanding_seg.begin(); i != outstanding_seg.end();)
