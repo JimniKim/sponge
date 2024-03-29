@@ -28,7 +28,8 @@ TCPSender::TCPSender(const size_t capacity, const uint16_t retx_timeout, const s
     , rto(_initial_retransmission_timeout)
     , time_passed (0)
     , timer (false)
-    , start(false) {}
+    , start(false)
+    , _fin (false) {}
 
 uint64_t TCPSender::bytes_in_flight() const 
 { 
@@ -46,7 +47,7 @@ void TCPSender::fill_window()
     if (_window_size == 0)
         num = 1;
 
-    while (num > 0 )
+    while (num > 0 && _fin == false)
     {
         TCPSegment new_seg;
 
@@ -67,7 +68,7 @@ void TCPSender::fill_window()
         new_seg.payload() = Buffer (_stream.read(min_num)); 
         num = num - min_num;
 
-         if (num  > 0   && _stream.eof())
+         if (num  > 0   && _stream.eof() )
             new_seg.header().fin = true;
         
         num = num - new_seg.header().fin;
