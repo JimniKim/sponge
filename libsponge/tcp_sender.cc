@@ -72,7 +72,7 @@ void TCPSender::fill_window()
         string payload_read = _stream.read(min_num);
         new_seg.payload() = Buffer (move(payload_read)); 
 
-        num = num - payload_read.size();
+        num = num - new_seg.payload().str().size();
         
         num = num - new_seg.header().fin;
 
