@@ -41,12 +41,12 @@ uint64_t TCPSender::bytes_in_flight() const
 void TCPSender::fill_window() 
 {
     
-     int num = _window_size;
+     uint16_t num = _window_size;
 
     if (_window_size == 0)
         num = 1;
 
-    while (num >= 0 )
+    while (num > 0 )
     {
         TCPSegment new_seg;
 
