@@ -76,7 +76,7 @@ void TCPSender::fill_window()
         num = num - new_seg.header().fin;
 
 
-        if (new_seg.length_in_sequence_space() != 0)
+        //if (new_seg.length_in_sequence_space() != 0)
         {
             _segments_out.push(new_seg);
             outstanding_seg.insert({_next_seqno, new_seg}); 
