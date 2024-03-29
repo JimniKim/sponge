@@ -134,7 +134,7 @@ void TCPSender::tick(const size_t ms_since_last_tick)
 {
     time_passed = time_passed + ms_since_last_tick;
 
-    if ((time_passed > rto) && (!outstanding_seg.empty()))
+    if ((time_passed >= rto) && (!outstanding_seg.empty()))
     {
         _segments_out.push(outstanding_seg.begin()->second);
         if (_window_size > 0)
