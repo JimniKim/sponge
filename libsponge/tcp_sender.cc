@@ -116,7 +116,7 @@ void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
 
     for (auto i = outstanding_seg.begin(); i != outstanding_seg.end();)
     {
-        if (i->first +i->second.length_in_sequence_space() <= unwrap (ackno, _isn, last_abs) )
+        if (i->first +i->second.length_in_sequence_space() <= unwrap (ackno, _isn, _next_seqno) )
             i = outstanding_seg.erase(i);
         else
             ++i;
