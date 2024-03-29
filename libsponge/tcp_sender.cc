@@ -57,20 +57,21 @@ void TCPSender::fill_window()
          new_seg.header().seqno = wrap(_next_seqno, _isn);
 
         num = num - new_seg.header().syn;
+        
 
-       
+        if (_fin == false && _stream.eof())
+        {
+            _fin = true;
+        }
+        
+
+        if (_fin && _stream.buffer_size() < min (num, TCPConfig::MAX_PAYLOAD_SIZE))
+            new_seg.header().fin = true;
 
         size_t min_num = min(num, min(_stream.buffer_size() ,TCPConfig::MAX_PAYLOAD_SIZE));
         string payload_read = _stream.read(min_num);
         new_seg.payload() = Buffer (move(payload_read)); 
-        
 
-        if (_fin == false && _stream.eof() && (( payload_read.size() + bytes_in_flight()) < _window_size)&& (payload_read.size() != _window_size))
-        {
-            new_seg.header().fin = true;
-            _fin = true;
-        }
-        
        num = num - new_seg.payload().str().size();
         
         num = num - new_seg.header().fin;
