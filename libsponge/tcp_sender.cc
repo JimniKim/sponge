@@ -64,7 +64,7 @@ void TCPSender::fill_window()
 
         size_t min_num = min(num, min(_stream.buffer_size() ,TCPConfig::MAX_PAYLOAD_SIZE));
         new_seg.payload() = Buffer (_stream.read(min_num)); 
-        num = num - new_seg.payload().str().size();
+        
 
          if (_stream.eof() && ((new_seg.payload().str().size() + bytes_in_flight()) < _window_size)&& (min_num != num))
             {
@@ -72,7 +72,7 @@ void TCPSender::fill_window()
                 _fin = true;
             }
         
-       
+       num = num - new_seg.payload().str().size();
         
         num = num - new_seg.header().fin;
 
