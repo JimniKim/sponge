@@ -59,7 +59,7 @@ void TCPSender::fill_window()
         num = num - new_seg.header().syn;
         
 
-        if (_fin == false && _stream.eof())
+        if (_stream.eof())
         {
             _fin = true;
         }
