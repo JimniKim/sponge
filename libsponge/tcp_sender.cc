@@ -80,7 +80,7 @@ void TCPSender::fill_window()
         if (_stream.eof() && (num >0))
             {
                 new_seg.header().fin = true;
-                
+                _fin = true;
             }
         //num = num - new_seg.payload().size();
         
