@@ -78,7 +78,10 @@ void TCPSender::fill_window()
         num = num ==TCPConfig::MAX_PAYLOAD_SIZE? 1 : num - new_seg.payload().size();
 
         if (_stream.eof() && (num >0))
-            new_seg.header().fin = true;
+            {
+                new_seg.header().fin = true;
+                _fin = true;
+            }
         //num = num - new_seg.payload().size();
         
         num = num - new_seg.header().fin;
