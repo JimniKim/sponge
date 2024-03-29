@@ -42,14 +42,11 @@ uint64_t TCPSender::bytes_in_flight() const
 void TCPSender::fill_window() 
 {
     
-    size_t win = _window_size;
     size_t num =0;
     uint64_t abs_possible = unwrap(_ackno,_isn, _next_seqno) + _window_size;
 
-    if (_window_size == 0)
-        win = 1;
 
-    while (abs_possible > _next_seqno && _fin == false)
+    while (abs_possible >= _next_seqno && _fin == false)
     {
         TCPSegment new_seg;
 
@@ -62,7 +59,7 @@ void TCPSender::fill_window()
                 
          new_seg.header().seqno = wrap(_next_seqno, _isn);
 
-        num = abs_possible - _next_seqno - new_seg.header().syn;
+        num = abs_possible - _next_seqno - new_seg.header().syn + _window_size==0;
 
        
 
