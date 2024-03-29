@@ -55,9 +55,9 @@ void ByteStream::pop_output(const size_t len) {
     buffer.clear();
     buffer.str("");
     buffer << pop_buffer;
-    curr_left_size = curr_left_size + len;
+    curr_left_size = curr_left_size + pop_buffer.size();
     curr_size = stream_capacity - curr_left_size;
-    total_read = total_read + len;
+    total_read = total_read + pop_buffer.size();
 }
 
 //! Read (i.e., copy and then pop) the next "len" bytes of the stream
