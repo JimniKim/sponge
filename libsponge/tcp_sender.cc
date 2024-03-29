@@ -65,7 +65,7 @@ void TCPSender::fill_window()
         }
         
 
-        if (_fin && _stream.buffer_size() < num)
+        if (_fin && _stream.buffer_size() < min (num, TCPConfig::MAX_PAYLOAD_SIZE))
             new_seg.header().fin = true;
 
         size_t min_num = min(num, min(_stream.buffer_size() ,TCPConfig::MAX_PAYLOAD_SIZE));
