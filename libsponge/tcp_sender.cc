@@ -68,8 +68,11 @@ void TCPSender::fill_window()
         new_seg.payload() = Buffer (_stream.read(min_num)); 
         num = num - min_num;
 
-         if (num  > 0   && _stream.eof() )
-            new_seg.header().fin = true;
+         if (num  > 0   && _stream.eof())
+            {
+                new_seg.header().fin = true;
+                _fin = true;
+            }
         
         num = num - new_seg.header().fin;
 
