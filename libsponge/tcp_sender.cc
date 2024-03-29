@@ -29,14 +29,12 @@ TCPSender::TCPSender(const size_t capacity, const uint16_t retx_timeout, const s
     , time_passed (0)
     , timer (false)
     , start(false)
-    , _fin (false) {}
+    , _fin (false)
+    , flight_bytes(0) {}
 
 uint64_t TCPSender::bytes_in_flight() const 
 { 
-    uint64_t count = 0;
-    for (auto i = outstanding_seg.begin(); i != outstanding_seg.end(); i++)
-        count = count + i->second.length_in_sequence_space();
-    return count;
+    return flight_bytes;
 }
 
 void TCPSender::fill_window() 
@@ -87,6 +85,7 @@ void TCPSender::fill_window()
 
         seq = seq + new_seg.length_in_sequence_space();
         _next_seqno = _next_seqno + new_seg.length_in_sequence_space();
+        flight_bytes = flight_bytes + new_seg.length_in_sequence_space();
 
         if (outstanding_seg.empty())
         {
@@ -132,7 +131,10 @@ void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
     for (auto i = outstanding_seg.begin(); i != outstanding_seg.end();)
     {
         if (i->first +i->second.length_in_sequence_space() <= unwrap (ackno, _isn, _next_seqno))
-            i = outstanding_seg.erase(i);
+            {
+                flight_bytes = flight_bytes - i->second.length_in_sequence_space();
+                i = outstanding_seg.erase(i);
+            }
         else
             ++i;
     }

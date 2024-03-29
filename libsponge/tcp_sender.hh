@@ -43,6 +43,7 @@ class TCPSender {
     bool timer;
     bool start;
     bool _fin;
+    uint64_t flight_bytes;
 
   public:
     //! Initialize a TCPSender
