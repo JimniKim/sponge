@@ -52,12 +52,13 @@ string ByteStream::peek_output(const size_t len) const {
 //! \param[in] len bytes will be removed from the output side of the buffer
 void ByteStream::pop_output(const size_t len) {
     string pop_buffer = buffer.str().substr(len);
+    size_t a = buffer.str().size() - pop_buffer.size();
     buffer.clear();
     buffer.str("");
     buffer << pop_buffer;
-    curr_left_size = curr_left_size + pop_buffer.size();
+    curr_left_size = curr_left_size + a;
     curr_size = stream_capacity - curr_left_size;
-    total_read = total_read + pop_buffer.size();
+    total_read = total_read + a;
 }
 
 //! Read (i.e., copy and then pop) the next "len" bytes of the stream
