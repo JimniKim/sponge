@@ -75,12 +75,14 @@ void TCPSender::fill_window()
 
 
         if (new_seg.length_in_sequence_space() != 0)
+        {
             _segments_out.push(new_seg);
-        
-        outstanding_seg.insert({last_abs, new_seg}); 
+            outstanding_seg.insert({_next_seqno, new_seg}); 
+        }
+            
 
         //seq = seq + new_seg.length_in_sequence_space();
-        last_abs = last_abs + new_seg.length_in_sequence_space();
+        _next_seqno = _next_seqno + new_seg.length_in_sequence_space();
         //num = num - new_seg.payload().str().size();
 
         if (!outstanding_seg.empty())
@@ -153,7 +155,7 @@ unsigned int TCPSender::consecutive_retransmissions() const {return consecutive_
 void TCPSender::send_empty_segment() 
 {
     TCPSegment new_seg;
-    new_seg.header().seqno = wrap(last_abs, _isn);
+    new_seg.header().seqno = wrap(_next_seqno, _isn);
     //if (start == false)
     //        new_seg.header().syn = true;
     //start = true;
