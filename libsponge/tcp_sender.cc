@@ -28,8 +28,7 @@ TCPSender::TCPSender(const size_t capacity, const uint16_t retx_timeout, const s
     , rto(_initial_retransmission_timeout)
     , time_passed (0)
     , timer (false)
-    , start(false)
-    , last_abs (0) {}
+    , start(false) {}
 
 uint64_t TCPSender::bytes_in_flight() const 
 { 
@@ -58,7 +57,7 @@ void TCPSender::fill_window()
         }
 
                 
-         new_seg.header().seqno = wrap(last_abs, _isn);
+         new_seg.header().seqno = wrap(_next_seqno, _isn);
 
         num = num-new_seg.header().syn;
 

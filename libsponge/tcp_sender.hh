@@ -42,7 +42,6 @@ class TCPSender {
     unsigned int time_passed;
     bool timer;
     bool start;
-    uint64_t last_abs;
 
   public:
     //! Initialize a TCPSender
