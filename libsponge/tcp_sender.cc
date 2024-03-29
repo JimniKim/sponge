@@ -64,15 +64,17 @@ void TCPSender::fill_window()
 
         size_t min_num = min(num, min(_stream.buffer_size() ,TCPConfig::MAX_PAYLOAD_SIZE));
         new_seg.payload() = Buffer (_stream.read(min_num)); 
-        num = num - min_num;
+        
 
-         if (num > 0 && _stream.buffer_empty() && _stream.eof())
+         if (_stream.eof() && (min_num + _stream.eof() <= num) )
             {
                 new_seg.header().fin = true;
                 _fin = true;
             }
         
-        num = num - new_seg.header().fin;
+        //num = num - min_num;
+        
+        num = num - min_num - new_seg.header().fin;
 
 
         if (new_seg.length_in_sequence_space() != 0)
