@@ -61,8 +61,7 @@ void TCPSender::fill_window()
 
         //num = num - new_seg.header().syn;
         
-        if (num > TCPConfig::MAX_PAYLOAD_SIZE)
-            num = TCPConfig::MAX_PAYLOAD_SIZE;
+        num = min (num, TCPConfig::MAX_PAYLOAD_SIZE);
 
        // if (_stream.input_ended())
        // {
@@ -76,7 +75,8 @@ void TCPSender::fill_window()
         //size_t min_num = min(num, min(_stream.buffer_size() ,TCPConfig::MAX_PAYLOAD_SIZE));
         //string payload_read = _stream.read(min_num);
         new_seg.payload() = _stream.read(num);
-        num = num ==TCPConfig::MAX_PAYLOAD_SIZE? 1 : num - new_seg.payload().size();
+        //num = num ==TCPConfig::MAX_PAYLOAD_SIZE? 1 : num - new_seg.payload().size();
+        num = num - new_seg.payload().size();
         if (_window_size ==3 && new_seg.payload().str() == "abc")
         {
             std::cerr << std::endl << "num: " + (to_string(num))<< std::endl;
@@ -87,6 +87,7 @@ void TCPSender::fill_window()
                 new_seg.header().fin = true;
                 _fin = true;
             }
+        
         //num = num - new_seg.payload().size();
         
         num = num - new_seg.header().fin;

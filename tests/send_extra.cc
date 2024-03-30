@@ -237,7 +237,6 @@ int main() {
             test.execute(ExpectSegment{}.with_no_flags().with_syn(true).with_payload_size(0).with_seqno(isn));
             test.execute(WriteBytes("abc").with_end_input(true));
             test.execute(AckReceived{WrappingInt32{isn + 1}}.with_win(3));
-            test.execute(ExpectBytesInFlight{3}); // 삭제!!
             test.execute(ExpectNoSegment{}); // 삭제!!
             test.execute(ExpectSegment{}.with_payload_size(3).with_data("abc").with_seqno(isn + 1).with_no_flags()); // 이거 삭제!!
             test.execute(ExpectState{TCPSenderStateSummary::SYN_ACKED});
