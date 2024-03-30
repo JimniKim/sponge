@@ -132,7 +132,7 @@ void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
         _ackno = ackno;
         return;
     }
-    else if (seq < ackno.raw_value() || _ackno.raw_value() + (outstanding_seg.begin() -> second.length_in_sequence_space()) != ackno.raw_value())
+    else if (seq < ackno.raw_value() || (seq !=ackno.raw_value() && (_ackno.raw_value() + (outstanding_seg.begin() -> second.length_in_sequence_space()) != ackno.raw_value())))
         return;
 
     for (auto i = outstanding_seg.begin(); i != outstanding_seg.end();)
