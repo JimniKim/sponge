@@ -76,6 +76,10 @@ void TCPSender::fill_window()
         //string payload_read = _stream.read(min_num);
         new_seg.payload() = _stream.read(num);
         num = num ==TCPConfig::MAX_PAYLOAD_SIZE? 1 : num - new_seg.payload().size();
+        if (_window_size ==3 && new_seg.payload().str() == "abc")
+        {
+            std::runtime_error (to_string(num));
+        }
 
         if (_stream.eof() && (num >0))
             {
