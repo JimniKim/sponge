@@ -44,11 +44,10 @@ void TCPSender::fill_window()
     size_t num = _window_size? _window_size - bytes_in_flight(): 1;
     if (_window_size == 0 && bytes_in_flight() !=0)
         num =0;
-    //size_t curr_win = _window_size? _window_size - bytes_in_flight(): 1;
-    //string buffer_string = _stream.peek_output(_stream.buffer_size());
+   
     while (num > 0 && _fin == false)
     {
-        //num = _window_size - bytes_in_flight()? _window_size - bytes_in_flight(): 1;
+        
         TCPSegment new_seg;
 
         if (start == false)
@@ -61,36 +60,18 @@ void TCPSender::fill_window()
                 
          new_seg.header().seqno = wrap(_next_seqno, _isn);
 
-        //num = num - new_seg.header().syn;
-        
-        //num = min (num, TCPConfig::MAX_PAYLOAD_SIZE);
-
-       // if (_stream.input_ended())
-       // {
-       //     _fin = true;
-        //}
-        
-
-       // if (_fin && _stream.buffer_size() < min (num, TCPConfig::MAX_PAYLOAD_SIZE))
-        //    new_seg.header().fin = true;
-
-        //size_t min_num = min(num, min(_stream.buffer_size() ,TCPConfig::MAX_PAYLOAD_SIZE));
+       
         string payload_read = _stream.read(min (num, TCPConfig::MAX_PAYLOAD_SIZE));
         new_seg.payload() = Buffer (std::move(payload_read));
-        //num = num ==TCPConfig::MAX_PAYLOAD_SIZE? 1 : num - new_seg.payload().size();
-        num = num >= new_seg.payload().size()?num - new_seg.payload().size() :0 ;
-        if (_window_size ==3 && new_seg.payload().str() == "abc")
-        {
-            std::cerr << std::endl << "num: " + (to_string(num))<< std::endl;
-        }
-
+        
+        num = num - new_seg.payload().size();
+       
         if (_stream.eof() && (num >0))
             {
                 new_seg.header().fin = true;
                 _fin = true;
             }
         
-        //num = num - new_seg.payload().size();
         
         num = num - new_seg.header().fin;
 
@@ -184,8 +165,5 @@ void TCPSender::send_empty_segment()
 {
     TCPSegment new_seg;
     new_seg.header().seqno = wrap(_next_seqno, _isn);
-    //if (start == false)
-    //        new_seg.header().syn = true;
-    //start = true;
     _segments_out.push(new_seg);
 }
