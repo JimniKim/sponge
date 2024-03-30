@@ -128,18 +128,12 @@ void TCPSender::fill_window()
 void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_size) 
 {
     bool correct = false;
-    for (auto i = outstanding_seg.begin(); i != outstanding_seg.end();)
-    {
-        if (ackno.raw_value() == i->first + i->second.length_in_sequence_space())
-            correct = true;
-    }
-    
     if (ackno.raw_value() == _ackno.raw_value()){
         _window_size = window_size;
         _ackno = ackno;
         return;
     }
-    else if (!correct)
+    else if (seq < ackno.raw_value() || _ackno.raw_value() + (outstanding_seg.begin() -> second.length_in_sequence_space()) != ackno.raw_value())
         return;
 
     for (auto i = outstanding_seg.begin(); i != outstanding_seg.end();)
