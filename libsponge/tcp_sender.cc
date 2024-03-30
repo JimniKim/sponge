@@ -3,6 +3,7 @@
 #include "tcp_config.hh"
 
 #include <random>
+#include <iostream>
 
 // Dummy implementation of a TCP sender
 
@@ -78,7 +79,7 @@ void TCPSender::fill_window()
         num = num ==TCPConfig::MAX_PAYLOAD_SIZE? 1 : num - new_seg.payload().size();
         if (_window_size ==3 && new_seg.payload().str() == "abc")
         {
-            std::runtime_error (to_string(num));
+            std::cerr << std::endl << "num: " + (to_string(num))<< std::endl;
         }
 
         if (_stream.eof() && (num >0))
