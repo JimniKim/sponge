@@ -155,8 +155,8 @@ void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
     time_passed =0;
         
 
-    if (_window_size > 0)
-        fill_window();
+    
+    fill_window();
     
 }
 
