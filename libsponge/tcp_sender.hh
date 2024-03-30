@@ -7,8 +7,8 @@
 #include "wrapping_integers.hh"
 
 #include <functional>
-#include <queue>
 #include <map>
+#include <queue>
 
 //! \brief The "sender" part of a TCP implementation.
 
@@ -33,7 +33,7 @@ class TCPSender {
     //! the (absolute) sequence number for the next byte to be sent
     uint64_t _next_seqno{0};
 
-    map<uint64_t, TCPSegment> outstanding_seg{}; //store outstanding segments
+    map<uint64_t, TCPSegment> outstanding_seg{};  // store outstanding segments
     size_t _window_size;
     WrappingInt32 _ackno;
     unsigned int consecutive_retran;
