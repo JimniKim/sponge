@@ -46,7 +46,7 @@ void TCPSender::fill_window()
     //string buffer_string = _stream.peek_output(_stream.buffer_size());
     while (num > 0 && _fin == false)
     {
-        num = _window_size - bytes_in_flight()? _window_size - bytes_in_flight(): 1;
+        //num = _window_size - bytes_in_flight()? _window_size - bytes_in_flight(): 1;
         TCPSegment new_seg;
 
         if (start == false)
