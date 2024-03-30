@@ -91,11 +91,7 @@ void TCPSender::fill_window()
             }
         
         //num = num - new_seg.payload().size();
-        if (_window_size - bytes_in_flight() == payload_read.size())
-        {
-            new_seg.header().fin = false;
-            _fin = false;
-        }
+        
         num = num - new_seg.header().fin;
 
 
