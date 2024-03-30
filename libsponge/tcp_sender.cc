@@ -28,7 +28,6 @@ TCPSender::TCPSender(const size_t capacity, const uint16_t retx_timeout, const s
     , seq(_isn.raw_value())
     , rto(_initial_retransmission_timeout)
     , time_passed(0)
-    , timer(false)
     , start(false)
     , _fin(false)
     , flight_bytes(0) {}
@@ -122,7 +121,6 @@ void TCPSender::tick(const size_t ms_since_last_tick) {
         if (_window_size > 0) {
             consecutive_retran++;
             rto = rto * 2;
-            timer = true;
         }
 
         time_passed = 0;

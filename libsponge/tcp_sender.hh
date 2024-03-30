@@ -40,7 +40,6 @@ class TCPSender {
     uint32_t seq;
     unsigned int rto;
     unsigned int time_passed;
-    bool timer;
     bool start;
     bool _fin;
     uint64_t flight_bytes;
