@@ -127,27 +127,20 @@ void TCPSender::fill_window()
 //! \param window_size The remote receiver's advertised window size
 void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_size) 
 {
-    if (seq < ackno.raw_value() || ackno.raw_value() <= _ackno.raw_value())
+    bool correct = false;
+    for (auto i = outstanding_seg.begin(); i != outstanding_seg.end();)
     {
-        if (ackno.raw_value() == _ackno.raw_value())
-        {
-            _window_size = window_size;
-            _ackno = ackno;
-
-        }
+        if (ackno.raw_value() == i->first + i->second.length_in_sequence_space())
+            correct = true;
+    }
+    
+    if (ackno.raw_value() == _ackno.raw_value()){
+        _window_size = window_size;
+        _ackno = ackno;
         return;
     }
-
-    _window_size = window_size;
-    _ackno = ackno;
-        
-
-    rto = _initial_retransmission_timeout;
-    consecutive_retran =0;
-    time_passed =0;
-
-    if (outstanding_seg.empty())
-        timer = true;
+    else if (!correct)
+        return;
 
     for (auto i = outstanding_seg.begin(); i != outstanding_seg.end();)
     {
@@ -160,6 +153,13 @@ void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
             ++i;
     }
     
+    _window_size = window_size;
+    _ackno = ackno;
+        
+
+    rto = _initial_retransmission_timeout;
+    consecutive_retran =0;
+    time_passed =0;
         
 
     if (_window_size > 0)
