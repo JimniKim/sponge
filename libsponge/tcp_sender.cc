@@ -74,9 +74,9 @@ void TCPSender::fill_window()
 
         //size_t min_num = min(num, min(_stream.buffer_size() ,TCPConfig::MAX_PAYLOAD_SIZE));
         //string payload_read = _stream.read(min_num);
-        new_seg.payload() = _stream.read(min (num, TCPConfig::MAX_PAYLOAD_SIZE));
+        new_seg.payload() = Buffer (std::move(_stream.read(min (num, TCPConfig::MAX_PAYLOAD_SIZE))));
         //num = num ==TCPConfig::MAX_PAYLOAD_SIZE? 1 : num - new_seg.payload().size();
-        num = num - min (num, TCPConfig::MAX_PAYLOAD_SIZE);
+        num = num - new_seg.payload().size();
         if (_window_size ==3 && new_seg.payload().str() == "abc")
         {
             std::cerr << std::endl << "num: " + (to_string(num))<< std::endl;
