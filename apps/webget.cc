@@ -1,4 +1,4 @@
-#include "socket.hh"
+#include "tcp_sponge_socket.hh"
 #include "util.hh"
 
 #include <cstdlib>
@@ -17,7 +17,7 @@ void get_URL(const string &host, const string &path) {
     // Then you'll need to print out everything the server sends back,
     // (not just one call to read() -- everything) until you reach
     // the "eof" (end of file).
-    TCPSocket tcp;
+    CS144TCPSocket tcp;
     Address addr(host, "http");
     tcp.connect(addr);
     std::ostringstream ostr;
@@ -44,6 +44,7 @@ void get_URL(const string &host, const string &path) {
 
     cerr << "Function called: get_URL(" << host << ", " << path << ").\n";
     cerr << "Warning: get_URL() has not been implemented yet.\n";
+    tcp.wait_until_closed();
 }
 
 int main(int argc, char *argv[]) {
