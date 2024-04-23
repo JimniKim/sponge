@@ -21,7 +21,8 @@ class TCPConnection {
     //! in case the remote TCPConnection doesn't know we've received its whole stream?
     bool _linger_after_streams_finish{true};
     void really_send_seg_rst();
-    size_t last_time;
+    void really_send_seg();
+    size_t last_time{0};
     bool _active {true};
 
   public:
