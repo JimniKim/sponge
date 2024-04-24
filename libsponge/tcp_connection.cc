@@ -27,7 +27,7 @@ void TCPConnection::segment_received(const TCPSegment &seg)
     {
         _sender.stream_in().end_input();
         inbound_stream().end_input(); // set error state
-        _active = false // kill connection
+        _active = false; // kill connection
         return;
     }
 
@@ -40,14 +40,14 @@ void TCPConnection::segment_received(const TCPSegment &seg)
 
     if (seg.length_in_sequence_space()) 
     {
-        if (_sender.segments_out().empty)
+        if (_sender.segments_out().empty())
             _sender.send_empty_segment();
         _sender.fill_window();
         really_send_seg();
     }
 
     if (_receiver.ackno().has_value() && (seg.length_in_sequence_space()==0 
-    && (seg.header().seqno == _receiver.ackno().value -1))) // keep-alives
+    && (seg.header().seqno == _receiver.ackno().value() -1))) // keep-alives
     {
         _sender.send_empty_segment();
     }
@@ -78,7 +78,7 @@ void TCPConnection::tick(const size_t ms_since_last_tick)
         really_send_seg_rst();
         _sender.stream_in().end_input();
         inbound_stream().end_input(); // set error state
-        _active = false // kill connection
+        _active = false; // kill connection
         return;
     }
     
@@ -94,7 +94,7 @@ void TCPConnection::tick(const size_t ms_since_last_tick)
     {
         if (last_time >= 10* _cfg.rt_timeout && _linger_after_streams_finish) //_linger_after_streams_finish
         {
-            _active = false // kill connection
+            _active = false; // kill connection
         }
         if (!_linger_after_streams_finish) // passive close
         {
@@ -143,7 +143,7 @@ TCPConnection::~TCPConnection() {
             really_send_seg_rst();
             _sender.stream_in().end_input();
             inbound_stream().end_input(); // set error state
-            _active = false // kill connection
+            _active = false; // kill connection
             
             // Your code here: need to send a RST segment to the peer
         }
