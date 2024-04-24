@@ -22,7 +22,7 @@ size_t TCPConnection::time_since_last_segment_received() const { return last_tim
 
 void TCPConnection::segment_received(const TCPSegment &seg) 
 {  
-     
+    last_time =0;
     if (seg.header().rst)
     {
         _sender.stream_in().end_input();
@@ -51,6 +51,9 @@ void TCPConnection::segment_received(const TCPSegment &seg)
     {
         _sender.send_empty_segment();
     }
+    bool prereq1 = _receiver.unassembled_bytes() ==0 && inbound_stream().input_ended(); // prereq1
+    if (prereq1 && !_fin)
+        _linger_after_streams_finish = false;
     
 }
 
@@ -76,13 +79,38 @@ void TCPConnection::tick(const size_t ms_since_last_tick)
         _sender.stream_in().end_input();
         inbound_stream().end_input(); // set error state
         _active = false // kill connection
+        return;
     }
+    
+
+    bool prereq1 = _receiver.unassembled_bytes() ==0 && inbound_stream().input_ended(); // prereq1
+    bool prereq2 = _sender.stream_in().input_ended() && _fin; // prereq2
+    bool prereq3 = _receiver.ackno().value() == _sender.next_seqno(); // prereq3
+    
+    if (prereq1 && !_fin)
+        _linger_after_streams_finish = false;
+    
+    if (prereq1 && prereq2 && prereq3)
+    {
+        if (last_time >= 10* _cfg.rt_timeout && _linger_after_streams_finish) //_linger_after_streams_finish
+        {
+            _active = false // kill connection
+        }
+        if (!_linger_after_streams_finish) // passive close
+        {
+            _active = false;
+        }
+
+    }
+
     // 
 }
 
 void TCPConnection::end_input_stream() 
 {
     _sender.stream_in().end_input();
+    _sender.fill_window();
+    really_send_seg();
     //
 }
 
@@ -100,6 +128,8 @@ void TCPConnection::connect()
             seg.header().ackno = _ackno.value();
         }
         seg.header().win= static_cast<uint16_t>(_receiver.window_size());
+        if (new_seg.header().fin)
+            _fin = true;
     
         _segments_out.push(seg);
     }
@@ -151,6 +181,8 @@ void TCPConnection:: really_send_seg()
         }
 
         new_seg.header().win= static_cast<uint16_t>(_receiver.window_size());
+        if (new_seg.header().fin)
+            _fin = true;
         _segments_out.push (new_seg);
 
     }
