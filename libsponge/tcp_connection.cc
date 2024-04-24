@@ -124,8 +124,8 @@ void TCPConnection::connect()
         _sender.segments_out().pop();
        if (_receiver.ackno().has_value())
         {
-            new_seg.header().ack = true;
-            new_seg.header().ackno = _receiver.ackno().value();
+            seg.header().ack = true;
+            seg.header().ackno = _receiver.ackno().value();
         }
         seg.header().win= static_cast<uint16_t>(_receiver.window_size());
     
