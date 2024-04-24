@@ -35,7 +35,7 @@ void TCPConnection::segment_received(const TCPSegment &seg)
 
     if (seg.header().ack) 
     {
-        _sender.ack_received(_receiver.ackno().value(),_receiver.window_size());
+        _sender.ack_received(seg.header().ackno, seg.header().win);
     }
 
     if (seg.length_in_sequence_space()) 
@@ -46,13 +46,13 @@ void TCPConnection::segment_received(const TCPSegment &seg)
         really_send_seg();
     }
 
-    if (_receiver.ackno().has_value() && (seg.length_in_sequence_space()==0 
-    && (seg.header().seqno == _receiver.ackno().value() -1))) // keep-alives
-    {
-        _sender.send_empty_segment();
-    }
+    //if (_receiver.ackno().has_value() && (seg.length_in_sequence_space()==0 
+    //&& (seg.header().seqno == _receiver.ackno().value() -1))) // keep-alives
+    //{
+    //    _sender.send_empty_segment();
+    //}
     bool prereq1 = _receiver.unassembled_bytes() ==0 && inbound_stream().input_ended(); // prereq1
-    if (prereq1 && !_fin)
+    if (prereq1 && !_sender.stream_in().eof())
         _linger_after_streams_finish = false;
     
 }
@@ -79,13 +79,14 @@ void TCPConnection::tick(const size_t ms_since_last_tick)
         _sender.stream_in().set_error();
         inbound_stream().set_error(); // set error state
         _active = false; // kill connection
-        return;
     }
+    else
+        really_send_seg();
     
 
     bool prereq1 = _receiver.unassembled_bytes() ==0 && inbound_stream().input_ended(); // prereq1
-    bool prereq2 = _sender.stream_in().input_ended() && _fin; // prereq2
-    bool prereq3 = _receiver.ackno().value() == _sender.next_seqno(); // prereq3
+    bool prereq2 = _sender.stream_in().eof() && _sender.next_seqno_absolute() == _sender.stream_in().bytes_written() + 2; // prereq2
+    bool prereq3 = _sender.bytes_in_flight(); // prereq3
     
     //if (prereq1 && !_fin)
     //    _linger_after_streams_finish = false;
@@ -121,15 +122,12 @@ void TCPConnection::connect()
     {
         TCPSegment seg = _sender.segments_out().front();
         _sender.segments_out().pop();
-        auto _ackno = _receiver.ackno();
-        if (_ackno.has_value())
+       if (_receiver.ackno().has_value())
         {
-            seg.header().ack = true;
-            seg.header().ackno = _ackno.value();
+            new_seg.header().ack = true;
+            new_seg.header().ackno = _receiver.ackno().value();
         }
         seg.header().win= static_cast<uint16_t>(_receiver.window_size());
-        if (seg.header().fin)
-            _fin = true;
     
         _segments_out.push(seg);
     }
@@ -154,7 +152,8 @@ TCPConnection::~TCPConnection() {
 
 void TCPConnection::really_send_seg_rst()
 {
-    _sender.send_empty_segment();
+    if (_sender.segments_out().empty() == false)
+        _sender.send_empty_segment();
     TCPSegment new_seg = _sender.segments_out().front();
     _sender.segments_out().pop();
     if (_receiver.ackno().has_value())
@@ -181,8 +180,7 @@ void TCPConnection:: really_send_seg()
         }
 
         new_seg.header().win= static_cast<uint16_t>(_receiver.window_size());
-        if (new_seg.header().fin)
-            _fin = true;
+        
         _segments_out.push (new_seg);
 
     }
