@@ -25,8 +25,8 @@ void TCPConnection::segment_received(const TCPSegment &seg)
     last_time =0;
     if (seg.header().rst)
     {
-        _sender.stream_in().end_input();
-        inbound_stream().end_input(); // set error state
+        _sender.stream_in().set_error();
+        inbound_stream().set_error(); // set error state
         _active = false; // kill connection
         return;
     }
@@ -76,8 +76,8 @@ void TCPConnection::tick(const size_t ms_since_last_tick)
     if (_sender.consecutive_retransmissions()> TCPConfig::MAX_RETX_ATTEMPTS)
     {
         really_send_seg_rst();
-        _sender.stream_in().end_input();
-        inbound_stream().end_input(); // set error state
+        _sender.stream_in().set_error();
+        inbound_stream().set_error(); // set error state
         _active = false; // kill connection
         return;
     }
@@ -141,8 +141,8 @@ TCPConnection::~TCPConnection() {
             cerr << "Warning: Unclean shutdown of TCPConnection\n";
             
             really_send_seg_rst();
-            _sender.stream_in().end_input();
-            inbound_stream().end_input(); // set error state
+            _sender.stream_in().set_error();
+            inbound_stream().set_error(); // set error state
             _active = false; // kill connection
             
             // Your code here: need to send a RST segment to the peer
