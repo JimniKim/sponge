@@ -128,7 +128,7 @@ void TCPConnection::connect()
             seg.header().ackno = _ackno.value();
         }
         seg.header().win= static_cast<uint16_t>(_receiver.window_size());
-        if (new_seg.header().fin)
+        if (seg.header().fin)
             _fin = true;
     
         _segments_out.push(seg);
