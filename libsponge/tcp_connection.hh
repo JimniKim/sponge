@@ -6,6 +6,10 @@
 #include "tcp_sender.hh"
 #include "tcp_state.hh"
 
+// Ha Tran
+// CS 144 Lab 4
+// 20201028W
+
 //! \brief A complete endpoint of a TCP connection
 class TCPConnection {
   private:
@@ -20,6 +24,33 @@ class TCPConnection {
     //! for 10 * _cfg.rt_timeout milliseconds after both streams have ended,
     //! in case the remote TCPConnection doesn't know we've received its whole stream?
     bool _linger_after_streams_finish{true};
+
+    //! state variable for active() function
+    bool _active{true};
+
+    //! time in ms since the last segment received
+    size_t _last_segm_recv_timer{0};
+
+    //! set both streams to error, set stream to inactive
+    void reset();
+
+    //! if stream is active, try to send segments from sender's output queue
+    //! set ackno and window size if available from receiver
+    //! set RST flag if applicable
+    void send_segments(bool rst = false);
+
+    //! check conditions for a clean shutdown, set connection to inactive if met
+    void try_closing_connection();
+
+    //! if peer ended input stream and we've received all bytes, no need to linger
+    void try_switching_close_mode();
+
+    //! return true if next absolute seqno we expect is not 0
+    //! if we've received a SYN flag, next absolute seqno will be at least 1
+    bool syn_sent();
+
+    //! en/disable cout statements for debugging
+    bool debug{false};
 
   public:
     //! \name "Input" interface for the writer
