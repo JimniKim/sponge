@@ -87,8 +87,8 @@ void TCPConnection::tick(const size_t ms_since_last_tick)
     bool prereq2 = _sender.stream_in().input_ended() && _fin; // prereq2
     bool prereq3 = _receiver.ackno().value() == _sender.next_seqno(); // prereq3
     
-    if (prereq1 && !_fin)
-        _linger_after_streams_finish = false;
+    //if (prereq1 && !_fin)
+    //    _linger_after_streams_finish = false;
     
     if (prereq1 && prereq2 && prereq3)
     {
