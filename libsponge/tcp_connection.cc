@@ -170,7 +170,7 @@ void TCPConnection::really_send_seg_rst()
 void TCPConnection:: really_send_seg()
 {
 
-    while (_sender.segments_out().empty == false)
+    while (_sender.segments_out().empty() == false)
     {
         TCPSegment new_seg = _sender.segments_out().front();
         _sender.segments_out().pop();
