@@ -21,7 +21,7 @@ TCPSender::TCPSender(const size_t capacity, const uint16_t retx_timeout, const s
     , outstanding_seg()
     , rto(retx_timeout) {}
 
-uint64_t TCPSender::bytes_in_flight() const { return flight_bytes; }
+uint64_t TCPSender::bytes_in_flight() const { return _next_seqno - absolute_ackno; }
 
 void TCPSender::fill_window() {
     size_t num = _window_size ? _window_size - bytes_in_flight() : 1;
@@ -84,7 +84,7 @@ void TCPSender::fill_window() {
 void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_size) {
     _window_size = window_size;  // update window size even if we get a wacko ackno?
 
-    uint64_t abs_new_ack = unwrap(ackno, _isn, absolute_ackno);
+    uint64_t abs_new_ack = unwrap(ackno, _isn, _next_seqno);
     if (abs_new_ack <= absolute_ackno || abs_new_ack > _next_seqno)
         return;
     absolute_ackno = abs_new_ack;
