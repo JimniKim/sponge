@@ -80,17 +80,22 @@ void TCPSender::fill_window() {
 //! \param ackno The remote receiver's ackno (acknowledgment number)
 //! \param window_size The remote receiver's advertised window size
 void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_size) {
-    _window_size = window_size;  // update window size even if we get a wacko ackno?
+  // update window size even if we get a wacko ackno?
 
     uint64_t new_abs_ackno = unwrap(ackno, _isn, _next_seqno);
-    if (new_abs_ackno <= _abs_ackno || new_abs_ackno > _next_seqno)
+    if (_abs_ackno == new_abs_ackno)
+    {
+        _window_size = window_size;
+        _abs_ackno = new_abs_ackno;
+        return;
+    }
+    else if (new_abs_ackno < _abs_ackno || new_abs_ackno > _next_seqno)
         return;
     
     
-    _abs_ackno = new_abs_ackno;
 
 
-    //while??
+    /*while??
     while (!_outstanding_segments.empty())
     {
         auto it = _outstanding_segments.begin();
@@ -102,7 +107,8 @@ void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
         else
             break;
     }
-    /*
+    */
+    
     for (auto it = _outstanding_segments.begin(); it != _outstanding_segments.end();)
         {
             if (it->seqno + it->segment.length_in_sequence_space() <= _abs_ackno)
@@ -113,9 +119,11 @@ void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
             else
                 break;
         }
-    */
+    
         // only restart timer if there are new complete segments confirmed to be received
-        
+    
+    _window_size = window_size;
+    _abs_ackno = new_abs_ackno;
     _timer.time_elapsed =0;
     _timer.timeout =_initial_retransmission_timeout;
     _n_consec_retransmissions = 0;
