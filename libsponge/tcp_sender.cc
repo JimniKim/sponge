@@ -31,7 +31,7 @@ uint64_t TCPSender::bytes_in_flight() const { return flight_bytes; }
 void TCPSender::fill_window() {
 
     size_t num = _window_size ? _window_size - bytes_in_flight() : 1;
-    size_t length = 0;
+    
     if (_window_size == 0 && bytes_in_flight() != 0)
         num = 0;
     
