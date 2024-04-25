@@ -65,6 +65,7 @@ void TCPSender::fill_window() {
         _segments_out.push(seg);
         _outstanding_segments.push_back(OrderedSegment{_next_seqno, seg});
         _next_seqno += seg.length_in_sequence_space();
+        flight_bytes = flight_bytes + seg.length_in_sequence_space();
 
         // if the timer isn't running, start it with the original rtto
         if (_timer.time_elapsed >= _timer.timeout  ||  _outstanding_segments.empty())
@@ -86,9 +87,16 @@ void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
         return;
     _abs_ackno = new_abs_ackno;
 
-    for (auto it = _outstanding_segments.begin();
-         it != _outstanding_segments.end() && it->seqno + it->segment.length_in_sequence_space() <= _abs_ackno;
-         it = _outstanding_segments.erase(it))
+    for (auto it = _outstanding_segments.begin(); it != _outstanding_segments.end();)
+        {
+            if (it->seqno + it->segment.length_in_sequence_space() <= _abs_ackno)
+            {
+                flight_bytes = flight_bytes - it->segment.length_in_sequence_space();
+                it = _outstanding_segments.erase(it);
+            }
+            else
+                break;
+        }
 
         // only restart timer if there are new complete segments confirmed to be received
         

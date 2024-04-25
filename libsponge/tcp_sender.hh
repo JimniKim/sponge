@@ -69,8 +69,7 @@ class TCPSender {
     //! number of times we've sent the same segment
     size_t _n_consec_retransmissions{0};
 
-    //! enable cout statements for debugging
-    bool debug{false};
+    uint64_t flight_bytes{0};
 
   public:
     //! Initialize a TCPSender
