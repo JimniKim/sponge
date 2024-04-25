@@ -24,6 +24,9 @@ TCPSender::TCPSender(const size_t capacity, const uint16_t retx_timeout, const s
 uint64_t TCPSender::bytes_in_flight() const { return _next_seqno - _abs_ackno; }
 
 void TCPSender::fill_window() {
+    if (_window_size <= bytes_in_flight())
+        return;
+    //size_t num = _window_size ? _window_size - bytes_in_flight() : 1;
     while (_next_seqno <= _abs_ackno + _window_size) {
         // this means we've already sent the segment with FIN flag
         if (_stream.eof() && _next_seqno >= _stream.bytes_written() + 2)

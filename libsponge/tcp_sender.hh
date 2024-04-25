@@ -24,13 +24,13 @@ class TCPSender {
         size_t timeout;
 
         //! return true if time elapsed exceeds the timeout we set
-        bool expired() { return time_elapsed >= timeout; }
+        //bool expired() { return time_elapsed >= timeout; }
 
         //! start a timer that expires after new_timeout milliseconds
-        void start(size_t new_timeout) {
-            time_elapsed = 0;
-            timeout = new_timeout;
-        }
+        //void start(size_t new_timeout) {
+        //    time_elapsed = 0;
+        //    timeout = new_timeout;
+        //}
     };
 
     //! our initial sequence number, the number for our SYN.
