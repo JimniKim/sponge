@@ -68,7 +68,7 @@ void TCPSender::fill_window() {
         flight_bytes = flight_bytes + seg.length_in_sequence_space();
 
         // if the timer isn't running, start it with the original rtto
-        if (_timer.time_elapsed >= _timer.timeout )
+        if (_timer.time_elapsed >= _timer.timeout )  // done
         {
             _timer.time_elapsed =0;
             _timer.timeout =_initial_retransmission_timeout;
@@ -80,12 +80,15 @@ void TCPSender::fill_window() {
 //! \param ackno The remote receiver's ackno (acknowledgment number)
 //! \param window_size The remote receiver's advertised window size
 void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_size) {
-    _window_size = window_size;  // update window size even if we get a wacko ackno?
+    //_window_size = window_size;  // update window size even if we get a wacko ackno?
 
-    uint64_t new_abs_ackno = unwrap(ackno, _isn, _abs_ackno);
+    uint64_t new_abs_ackno = unwrap(ackno, _isn, _next_seqno);
     if (new_abs_ackno <= _abs_ackno || new_abs_ackno > _next_seqno)
         return;
+    
+    _window_size = window_size;
     _abs_ackno = new_abs_ackno;
+
 
     //while??
     for (auto it = _outstanding_segments.begin(); it != _outstanding_segments.end();)
