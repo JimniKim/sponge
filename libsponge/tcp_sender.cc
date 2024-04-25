@@ -63,7 +63,7 @@ void TCPSender::fill_window() {
         if (seg.length_in_sequence_space() == 0)
             return;
         _segments_out.push(seg);
-        outstanding_seg.push_back(OrderedSegment{_next_seqno, seg});
+        outstanding_seg.insert({_next_seqno, seg});
         _next_seqno += seg.length_in_sequence_space();
 
         // if the timer isn't running, start it with the original rtto
@@ -87,8 +87,8 @@ void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
     absolute_ackno = new_abs_ackno;
 
     for (auto i = outstanding_seg.begin(); i != outstanding_seg.end();) {
-        if (i->seqno + i->segment.length_in_sequence_space() <= absolute_ackno) {
-            flight_bytes = flight_bytes - i->segment.length_in_sequence_space();
+        if (i->first + i->second.length_in_sequence_space() <= absolute_ackno) {
+            flight_bytes = flight_bytes - i->second.length_in_sequence_space();
             i = outstanding_seg.erase(i);
         } else
             break;
@@ -106,7 +106,7 @@ void TCPSender::tick(const size_t ms_since_last_tick) {
     time_passed = time_passed + ms_since_last_tick;
 
     if ((time_passed >= rto) && (!outstanding_seg.empty())) {
-        _segments_out.push(outstanding_seg.begin()->segment);
+        _segments_out.push(outstanding_seg.begin()->second);
         if (_window_size > 0) {
             consecutive_retran++;
             rto = rto * 2;
