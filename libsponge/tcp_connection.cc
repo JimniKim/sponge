@@ -182,7 +182,7 @@ void TCPConnection::tick(const size_t ms_since_last_tick) {
     else
         send_segments();
     
-    
+
     if (!active())
         return;
 
@@ -192,15 +192,14 @@ void TCPConnection::tick(const size_t ms_since_last_tick) {
     bool passive_close = !_linger_after_streams_finish;
 
     // prereq 1: inbound stream ended & fully assembled
-    bool istream_done = _receiver.stream_out().input_ended() && _receiver.unassembled_bytes() == 0;
+    bool prereq1 =inbound_stream().input_ended() && _receiver.unassembled_bytes() == 0;
 
     // prereq 2 (and 3): outbound stream ended, fully sent (and fully ack'd by remote peer)
-    bool ostream_done = _sender.stream_in().eof() &&
-                        _sender.next_seqno_absolute() == _sender.stream_in().bytes_written() + 2 &&
-                        _sender.bytes_in_flight() == 0;
+    bool prereq2 = _sender.stream_in().eof() && _sender.next_seqno_absolute() == (_sender.stream_in().bytes_written() + 2);
+    bool prereq3 = _sender.bytes_in_flight() == 0;
 
     
-    if ((active_close || passive_close) && istream_done && ostream_done) {
+    if ((active_close || passive_close) && prereq1 && prereq2 && prereq3) {
         
         _active = false;
     }
