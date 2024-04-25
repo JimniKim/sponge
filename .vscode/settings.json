@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "random": "cpp",
-        "ratio": "cpp"
+        "ratio": "cpp",
+        "optional": "cpp",
+        "system_error": "cpp"
     }
 }
