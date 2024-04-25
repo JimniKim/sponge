@@ -67,8 +67,12 @@ void TCPSender::fill_window() {
         _next_seqno += seg.length_in_sequence_space();
 
         // if the timer isn't running, start it with the original rtto
-        if (_timer.expired())
-            _timer.start(_initial_retransmission_timeout);
+        if (_timer.time_elapsed >= _timer.timeout  ||  _outstanding_segments.empty())
+        {
+            _timer.time_elapsed =0;
+            _timer.timeout =_initial_retransmission_timeout;
+        }
+           
     }
 }
 
@@ -87,13 +91,16 @@ void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
          it = _outstanding_segments.erase(it))
 
         // only restart timer if there are new complete segments confirmed to be received
-        _timer.start(_initial_retransmission_timeout);
+        
+    _timer.time_elapsed =0;
+    _timer.timeout =_initial_retransmission_timeout;
     _n_consec_retransmissions = 0;
+
     fill_window();
 }
 
 //! \param[in] ms_since_last_tick the number of milliseconds since the last call to this method
-void TCPSender::tick(const size_t ms_since_last_tick) {
+void TCPSender::tick(const size_t ms_since_last_tick) { //done
     _timer.time_elapsed += ms_since_last_tick;
     
     if ((_timer.time_elapsed >= _timer.timeout) && (!_outstanding_segments.empty())) {
@@ -109,7 +116,7 @@ void TCPSender::tick(const size_t ms_since_last_tick) {
 
 unsigned int TCPSender::consecutive_retransmissions() const { return _n_consec_retransmissions; }
 
-void TCPSender::send_empty_segment() {
+void TCPSender::send_empty_segment() { //done
     TCPSegment new_seg;
     new_seg.header().seqno = wrap(_next_seqno, _isn);
     _segments_out.push(new_seg);
