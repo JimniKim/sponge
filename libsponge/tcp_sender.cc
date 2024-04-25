@@ -46,6 +46,7 @@ void TCPSender::fill_window() {
         hdr.seqno = wrap(_next_seqno, _isn);
         if (!start) {
             hdr.syn = true;
+            start = true;
             num = num - 1;
         }
 
@@ -62,6 +63,7 @@ void TCPSender::fill_window() {
             hdr.fin = true;
             _fin = true;
         }
+        num = num - hdr.fin;
 
         seg.header() = hdr;
 
