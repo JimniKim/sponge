@@ -95,24 +95,15 @@ void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
 //! \param[in] ms_since_last_tick the number of milliseconds since the last call to this method
 void TCPSender::tick(const size_t ms_since_last_tick) {
     _timer.time_elapsed += ms_since_last_tick;
-    if (debug)
-        cout << ">> timer at: " << _timer.time_elapsed << " / " << _timer.timeout << endl;
-    if (_timer.expired()) {
-        if (debug)
-            cout << ">> >> timer expired!" << endl;
-        // retransmit earliest segment not fully acknowledged
-        if (!_outstanding_segments.empty()) {
-            if (debug)
-                cout << ">> >> resending segm: " << _outstanding_segments.begin()->segment.header().summary() << endl;
-            _segments_out.push(_outstanding_segments.begin()->segment);
-
-            // only backoff if we had to resend a segment
-            if (_window_size > 0) {
-                _n_consec_retransmissions++;
-                _timer.timeout *= 2;
-            }
-            _timer.start(_timer.timeout);
+    
+    if ((_timer.time_elapsed >= _timer.timeout) && (!_outstanding_segments.empty())) {
+        _segments_out.push(_outstanding_segments.begin()->segment);
+        if (_window_size > 0) {
+            _n_consec_retransmissions++;
+            _timer.timeout *= 2;
         }
+        _timer.time_elapsed =0;
+        
     }
 }
 
