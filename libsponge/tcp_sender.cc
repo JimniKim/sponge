@@ -68,7 +68,7 @@ void TCPSender::fill_window() {
         flight_bytes = flight_bytes + seg.length_in_sequence_space();
 
         // if the timer isn't running, start it with the original rtto
-        if (_timer.time_elapsed >= _timer.timeout  ||  _outstanding_segments.empty())
+        if (_timer.time_elapsed >= _timer.timeout )
         {
             _timer.time_elapsed =0;
             _timer.timeout =_initial_retransmission_timeout;
@@ -87,6 +87,7 @@ void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
         return;
     _abs_ackno = new_abs_ackno;
 
+    //while??
     for (auto it = _outstanding_segments.begin(); it != _outstanding_segments.end();)
         {
             if (it->seqno + it->segment.length_in_sequence_space() <= _abs_ackno)
