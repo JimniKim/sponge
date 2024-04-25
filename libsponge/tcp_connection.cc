@@ -110,35 +110,28 @@ void TCPConnection::tick(const size_t ms_since_last_tick)
         _sender.stream_in().set_error();
         inbound_stream().set_error(); // set error state
         _active = false; // kill connection
-        _linger_after_streams_finish = false;
+        //_linger_after_streams_finish = false;
         return;
     }
-    else
-        really_send_seg();
+    else if (_receiver.ackno().has_value()) { 
+        _sender.fill_window();
+    }
+
+    really_send_seg();
     
 
-    bool prereq1 = _receiver.unassembled_bytes() ==0 && inbound_stream().input_ended(); // prereq1
-    bool prereq2 = _sender.stream_in().eof() && _sender.next_seqno_absolute() == _sender.stream_in().bytes_written() + 2; // prereq2
-    bool prereq3 = _sender.bytes_in_flight(); // prereq3
-    
-    //if (prereq1 && !_fin)
-    //    _linger_after_streams_finish = false;
+    bool prereq1 = inbound_stream().input_ended() && _receiver.unassembled_bytes() == 0;
+    bool prereq2 = _sender.stream_in().eof() && _sender.next_seqno_absolute() == (_sender.stream_in().bytes_written() + 2);
+    bool prereq3 = _sender.bytes_in_flight() == 0; 
     
     if (prereq1 && prereq2 && prereq3)
     {
-        if (last_time >= 10* _cfg.rt_timeout && _linger_after_streams_finish) //_linger_after_streams_finish
-        {
-            _active = false; // kill connection
-            _linger_after_streams_finish = false;
-        }
-        if (!_linger_after_streams_finish) // passive close
-        {
+        if (last_time >= 10 * _cfg.rt_timeout && _linger_after_streams_finish)
             _active = false;
-        }
-
+        else if (!_linger_after_streams_finish)
+            _active = false;
     }
 
-    // 
 }
 
 void TCPConnection::end_input_stream() 
@@ -146,7 +139,7 @@ void TCPConnection::end_input_stream()
     _sender.stream_in().end_input();
     _sender.fill_window();
     really_send_seg();
-    //
+    
 }
 
 void TCPConnection::connect() 
@@ -175,7 +168,7 @@ TCPConnection::~TCPConnection() {
 
 void TCPConnection::really_send_seg_rst()
 {
-    if (_sender.segments_out().empty() == false)
+    if (_sender.segments_out().empty())
         _sender.send_empty_segment();
     TCPSegment new_seg = _sender.segments_out().front();
     _sender.segments_out().pop();
