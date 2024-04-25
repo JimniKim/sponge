@@ -211,10 +211,10 @@ TCPConnection::~TCPConnection() {
     try {
         if (active()) {
             cerr << "Warning: Unclean shutdown of TCPConnection\n";
-            if (_sender.segments_out().empty())
-                _sender.send_empty_segment();
             send_segments_rst();
-            reset();
+            _sender.stream_in().set_error();
+            inbound_stream().set_error(); // set error state
+            _active = false; // kill connection
         }
     } catch (const exception &e) {
         std::cerr << "Exception destructing TCP FSM: " << e.what() << std::endl;
