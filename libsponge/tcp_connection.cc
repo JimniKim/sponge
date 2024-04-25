@@ -126,7 +126,7 @@ void TCPConnection::send_segments() {
 }
  void TCPConnection::send_segments_rst()
  {
-    if (_sender.segments_out().empty() == false)
+    if (_sender.segments_out().empty())
         _sender.send_empty_segment();
     TCPSegment new_seg = _sender.segments_out().front();
     _sender.segments_out().pop();
