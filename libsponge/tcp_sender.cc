@@ -78,7 +78,6 @@ void TCPSender::fill_window() {
         else 
             return;
         
-        _next_seqno += length;
 
         _next_seqno = _next_seqno + length;
         flight_bytes = flight_bytes + length;
@@ -89,9 +88,6 @@ void TCPSender::fill_window() {
             time_passed = 0;
         }
 
-
-        //if (_stream.buffer_empty() || num <= 0)
-        //    return;
     }
 }
 
