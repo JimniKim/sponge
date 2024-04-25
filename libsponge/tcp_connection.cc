@@ -183,25 +183,7 @@ void TCPConnection::tick(const size_t ms_since_last_tick) {
         send_segments();
     
 
-    bool prereq1 = _receiver.unassembled_bytes() ==0 && inbound_stream().input_ended(); // prereq1
-    bool prereq2 = _sender.stream_in().eof() && _sender.next_seqno_absolute() == _sender.stream_in().bytes_written() + 2; // prereq2
-    bool prereq3 = _sender.bytes_in_flight() ==0; // prereq3
-    
-    //if (prereq1 && !_fin)
-    //    _linger_after_streams_finish = false;
-    
-    if (prereq1 && prereq2 && prereq3)
-    {
-        if (ms_since_last_tick >= 10* _cfg.rt_timeout && _linger_after_streams_finish) //_linger_after_streams_finish
-        {
-            _active = false; // kill connection
-        }
-        if (!_linger_after_streams_finish) // passive close
-        {
-            _active = false;
-        }
-
-    }
+    try_closing_connection();
 
 }
 
