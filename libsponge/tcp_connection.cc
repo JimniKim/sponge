@@ -183,8 +183,8 @@ void TCPConnection::tick(const size_t ms_since_last_tick) {
         send_segments();
     
 
-    if (!active())
-        return;
+    //if (!active())
+    //    return;
 
     
     //send_segments();
