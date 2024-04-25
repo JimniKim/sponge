@@ -96,13 +96,26 @@ void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
                  ackno.raw_value())))
         return;
 
+
+    while (!outstanding_seg.empty())
+    {
+        auto i = outstanding_seg.begin();
+        if (i->first + i->second.length_in_sequence_space() <= unwrap(ackno, _isn, _next_seqno)) {
+            flight_bytes = flight_bytes - i->second.length_in_sequence_space();
+            outstanding_seg.erase(i);
+        }
+        else
+            break;
+    }   
+    /* 
     for (auto i = outstanding_seg.begin(); i != outstanding_seg.end();) {
         if (i->first + i->second.length_in_sequence_space() <= unwrap(ackno, _isn, _next_seqno)) {
             flight_bytes = flight_bytes - i->second.length_in_sequence_space();
             i = outstanding_seg.erase(i);
         } else
-            ++i;
+            break;
     }
+    */
 
     _window_size = window_size;
     _ackno = ackno;
