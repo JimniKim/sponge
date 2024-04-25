@@ -16,6 +16,9 @@ void TCPReceiver::segment_received(const TCPSegment &seg) {
         syn = true;
     }
 
+    if (!syn)
+        return;
+
     if (seg.header().fin) {
         fin = true;
         abs_seq_fin = unwrap(
