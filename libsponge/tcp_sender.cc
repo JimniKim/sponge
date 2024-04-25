@@ -72,7 +72,7 @@ void TCPSender::fill_window() {
         if (length)
         {
             _segments_out.push(seg);
-            _outstanding_segments.push_back(OrderedSegment{_next_seqno, seg});
+            _outstanding_segments.insert({_next_seqno, seg});
         }
         else
             return;
@@ -103,9 +103,9 @@ void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
     _abs_ackno = new_abs_ackno;
     for (auto it = _outstanding_segments.begin(); it != _outstanding_segments.end();)
         {
-            if (it->seqno + it->segment.length_in_sequence_space() <= _abs_ackno)
+            if (it->first + it->second.length_in_sequence_space() <= _abs_ackno)
             {
-                flight_bytes = flight_bytes - it->segment.length_in_sequence_space();
+                flight_bytes = flight_bytes - it->second.length_in_sequence_space();
                 it = _outstanding_segments.erase(it);
             }
             else
@@ -128,7 +128,7 @@ void TCPSender::tick(const size_t ms_since_last_tick) { //done
     time_elapsed += ms_since_last_tick;
     
     if ((time_elapsed >= timeout) && (!_outstanding_segments.empty())) {
-        _segments_out.push(_outstanding_segments.begin()->segment);
+        _segments_out.push(_outstanding_segments.begin()->second);
         if (_window_size > 0) {
             _n_consec_retransmissions++;
             timeout *= 2;
