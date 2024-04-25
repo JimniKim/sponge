@@ -120,17 +120,7 @@ void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
 
         // only restart timer if there are new complete segments confirmed to be received
 
-    for (auto i = outstanding_seg.begin(); i != outstanding_seg.end();) {
-        if (i->first + i->second.length_in_sequence_space() <= absolute_ackno) {
-            flight_bytes = flight_bytes - i->second.length_in_sequence_space();
-            i = outstanding_seg.erase(i);
-        } else
-            break;
-    }
-
-
-
-   
+    
 
     rto = _initial_retransmission_timeout;
     consecutive_retran = 0;
