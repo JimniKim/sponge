@@ -24,7 +24,7 @@ bool TCPConnection::active() const { return _active; }
 void TCPConnection::end_input_stream() {
     _sender.stream_in().end_input();
     _sender.fill_window();
-    try_closing_connection();  // send_segments() called in try_closing_connection()
+    send_segments();  // send_segments() called in try_closing_connection()
 }
 
 void TCPConnection::connect() {
@@ -89,7 +89,7 @@ void TCPConnection::segment_received(const TCPSegment &seg) {
     
 }
 
-size_t TCPConnection::write(const string &data) {
+size_t TCPConnection::write(const string &data) {  //done
     size_t num_written = _sender.stream_in().write(data);
     _sender.fill_window();
     send_segments();
@@ -207,7 +207,7 @@ void TCPConnection::tick(const size_t ms_since_last_tick) {
 
 }
 
-TCPConnection::~TCPConnection() {
+TCPConnection::~TCPConnection() { //done
     try {
         if (active()) {
             cerr << "Warning: Unclean shutdown of TCPConnection\n";
