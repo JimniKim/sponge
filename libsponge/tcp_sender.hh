@@ -48,6 +48,8 @@ class TCPSender {
     //! the (absolute) sequence number for the next byte to be sent
     uint64_t _next_seqno{0};
 
+
+
     //! the (absolute) sequence number of the first byte the receiver has received
     uint64_t _abs_ackno{0};
 
@@ -63,8 +65,6 @@ class TCPSender {
     //! segments sent but not yet acknowledged by receiver, sorted by absolute seqno
     std::list<OrderedSegment> _outstanding_segments;
 
-    //! retransmission timer
-    Timer _timer;
 
     //! number of times we've sent the same segment
     size_t _n_consec_retransmissions{0};
@@ -72,6 +72,8 @@ class TCPSender {
     uint64_t flight_bytes{0};
     bool start {false};
     bool _fin {false};
+    unsigned int time_elapsed{0};
+    unsigned int timeout;
 
   public:
     //! Initialize a TCPSender

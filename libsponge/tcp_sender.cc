@@ -19,9 +19,9 @@ TCPSender::TCPSender(const size_t capacity, const uint16_t retx_timeout, const s
     , _initial_retransmission_timeout{retx_timeout}
     , _stream(capacity)
     , _outstanding_segments()
-    , _timer{0, retx_timeout} {}
+    , timeout(_initial_retransmission_timeout) {}
 
-uint64_t TCPSender::bytes_in_flight() const { return _next_seqno - _abs_ackno; }
+uint64_t TCPSender::bytes_in_flight() const { return flight_bytes; }
 
 void TCPSender::fill_window() {
     
@@ -81,10 +81,10 @@ void TCPSender::fill_window() {
         flight_bytes = flight_bytes + length;
 
         // if the timer isn't running, start it with the original rtto
-        if (_timer.time_elapsed >= _timer.timeout )  // done
+        if (time_elapsed >= timeout )  // done
         {
-            _timer.time_elapsed =0;
-            _timer.timeout =_initial_retransmission_timeout;
+            time_elapsed =0;
+            timeout =_initial_retransmission_timeout;
         }
            
     }
@@ -116,8 +116,8 @@ void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
     
     
     
-    _timer.time_elapsed =0;
-    _timer.timeout =_initial_retransmission_timeout;
+    time_elapsed =0;
+    timeout =_initial_retransmission_timeout;
     _n_consec_retransmissions = 0;
 
     fill_window();
@@ -125,15 +125,15 @@ void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
 
 //! \param[in] ms_since_last_tick the number of milliseconds since the last call to this method
 void TCPSender::tick(const size_t ms_since_last_tick) { //done
-    _timer.time_elapsed += ms_since_last_tick;
+    time_elapsed += ms_since_last_tick;
     
-    if ((_timer.time_elapsed >= _timer.timeout) && (!_outstanding_segments.empty())) {
+    if ((time_elapsed >= timeout) && (!_outstanding_segments.empty())) {
         _segments_out.push(_outstanding_segments.begin()->segment);
         if (_window_size > 0) {
             _n_consec_retransmissions++;
-            _timer.timeout *= 2;
+            timeout *= 2;
         }
-        _timer.time_elapsed =0;
+        time_elapsed =0;
         
     }
 }
