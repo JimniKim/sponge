@@ -26,7 +26,7 @@ TCPSender::TCPSender(const size_t capacity, const uint16_t retx_timeout, const s
     , rto(_initial_retransmission_timeout) {}
 
 
-uint64_t TCPSender::bytes_in_flight() const { return flight_bytes; }
+uint64_t TCPSender::bytes_in_flight() const { return _next_seqno - absolute_ackno; }
 
 void TCPSender::fill_window() {
 
@@ -38,27 +38,20 @@ void TCPSender::fill_window() {
     while (num > 0 && _fin == false) {
 
 
-        // if the receiver reports a window size of 0 but we have stuff to send
-        //if (_window_size == 0 && bytes_in_flight() == 0)
-        //    n_bytes_to_send = 1;
         TCPSegment new_seg;
 
-       
         if (start == false) {
             new_seg.header().syn = true;
             start = true;
             num = num - 1;
         }
 
-
         new_seg.header().seqno = wrap(_next_seqno, _isn);
 
-        // fill as many bytes as we can from the stream
 
         new_seg.payload() = _stream.read(min(num, TCPConfig::MAX_PAYLOAD_SIZE));
         num = num - new_seg.payload().size();
 
-        // include the FIN flag if it fits
        
         if (_stream.eof() && (num > 0)) {
             new_seg.header().fin = true;
@@ -67,7 +60,6 @@ void TCPSender::fill_window() {
 
         num = num - new_seg.header().fin;
 
-        // if the segment is empty (no flags or data) don't send
         size_t length = new_seg.length_in_sequence_space();
         if (length)
         {
@@ -82,7 +74,6 @@ void TCPSender::fill_window() {
         _next_seqno = _next_seqno + length;
         flight_bytes = flight_bytes + length;
 
-        // if the timer isn't running, start it with the original rtto
         if (time_passed >= rto) {
             rto = _initial_retransmission_timeout;
             time_passed = 0;
@@ -94,7 +85,7 @@ void TCPSender::fill_window() {
 //! \param ackno The remote receiver's ackno (acknowledgment number)
 //! \param window_size The remote receiver's advertised window size
 void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_size) {
-  // update window size even if we get a wacko ackno?
+  
     size_t new_ack = unwrap (ackno, _isn, _next_seqno);
     _window_size = window_size;
     
