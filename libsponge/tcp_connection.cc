@@ -33,37 +33,46 @@ void TCPConnection::connect() {
 }
 
 void TCPConnection::segment_received(const TCPSegment &seg) {
-    _receiver.segment_received(seg);
-    _last_segm_recv_timer = 0;
-
+    _last_segm_recv_timer =0;
     if (seg.header().rst)
-        reset();
-    if (seg.header().ack)
-        _sender.ack_received(seg.header().ackno, seg.header().win);
-    if (debug) {
-        cout << ">> received segm: " << seg.header().summary() << endl;
-        cout << ">> unasmb bytes: " << _receiver.unassembled_bytes() << endl;
+    {
+        _sender.stream_in().set_error();
+        inbound_stream().set_error(); // set error state
+        _active = false; // kill connection
+        //_linger_after_streams_finish = false;
+        return;
     }
-    if (syn_sent()) {
-        // if segment non-empty and we need to return an ack
-        // but no segments are ready to be sent out
-        // make sure at least one segment is sent in reply
-        if (seg.length_in_sequence_space() > 0 && _sender.segments_out().empty()) {
-            if (debug)
-                cout << ">> recv'd non-empty segm but queue empty, make empty segment to ack" << endl;
+
+    _receiver.segment_received(seg);
+
+    if (seg.header().ack) 
+    {
+        _sender.ack_received(seg.header().ackno, seg.header().win);
+        //really_send_seg();
+    }
+    if (seg.length_in_sequence_space()) 
+    {
+        if (_sender.segments_out().empty())
             _sender.send_empty_segment();
-        }
+        //_sender.fill_window();
         send_segments();
     }
 
-    if (seg.header().syn && !syn_sent())
+    if (seg.header().syn && !(_sender.next_seqno_absolute() > 0))
         connect();
-    if (debug) {
-        cout << "   >> stream out not oef? " << _sender.stream_in().eof() << ": " << _sender.stream_in().input_ended()
-             << " && " << _sender.stream_in().buffer_empty() << endl
-             << "   >> stream in input ended ie. fin recv'd? " << _receiver.stream_out().input_ended() << endl;
-    }
-    try_switching_close_mode();
+
+    //if (_receiver.ackno().has_value() && (seg.length_in_sequence_space()==0 
+    //&& (seg.header().seqno == _receiver.ackno().value() -1))) // keep-alives
+    //{
+    //    _sender.send_empty_segment();
+    //}
+
+    bool prereq1 = _receiver.unassembled_bytes() ==0 && inbound_stream().input_ended(); // prereq1
+    if (prereq1 && !_sender.stream_in().eof())
+        _linger_after_streams_finish = false;
+    
+    
+    return;
 }
 
 size_t TCPConnection::write(const string &data) {
