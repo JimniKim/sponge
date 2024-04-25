@@ -109,25 +109,20 @@ void TCPConnection::try_switching_close_mode() {
 
 //\param[in] rst is false by default, true a reset flag needs to be sent out
 void TCPConnection::send_segments(bool rst) {
-    if (!active())
-        return;
-
-    while (!_sender.segments_out().empty()) {
-        TCPSegment seg = _sender.segments_out().front();
+    while (_sender.segments_out().empty() == false)
+    {
+        TCPSegment new_seg = _sender.segments_out().front();
         _sender.segments_out().pop();
-
-        auto possible_ackno = _receiver.ackno();
-        if (possible_ackno.has_value()) {
-            seg.header().ack = true;
-            seg.header().ackno = possible_ackno.value();
-            seg.header().win = _receiver.window_size();
+        if (_receiver.ackno().has_value())
+        {
+            new_seg.header().ack = true;
+            new_seg.header().ackno = _receiver.ackno().value();
         }
-        if (rst)
-            seg.header().rst = true;
 
-        _segments_out.push(seg);
-        if (debug)
-            cout << ">> sending segment: " << seg.header().summary() << endl;
+        new_seg.header().win= static_cast<uint16_t>(_receiver.window_size());
+        
+        _segments_out.push (new_seg);
+
     }
 }
 
@@ -182,13 +177,6 @@ void TCPConnection::tick(const size_t ms_since_last_tick) {
     else
         send_segments();
     
-
-    //if (!active())
-    //    return;
-
-    
-    //send_segments();
-
     
     bool prereq1 = inbound_stream().input_ended() && _receiver.unassembled_bytes() == 0;
     bool prereq2 = _sender.stream_in().eof() && _sender.next_seqno_absolute() == (_sender.stream_in().bytes_written() + 2);
