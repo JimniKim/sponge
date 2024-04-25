@@ -28,7 +28,7 @@ void get_URL(const string &host, const string &path) {
          << "\r\n";
     ostr << "HOST: " << host << "\r\n";
     ostr << "Connection: close"
-         << "\n";
+         << "\r\n";
     ostr << "\r\n";
     tcp.write(ostr.str());
     server_send = tcp.read();
