@@ -36,7 +36,6 @@ uint64_t TCPSender::bytes_in_flight() const { return flight_bytes; }
 
 void TCPSender::fill_window() {
     size_t num = _window_size ? _window_size - bytes_in_flight() : 1;
-    size_t length =0;
     if (_window_size == 0 && bytes_in_flight() != 0)
         num = 0;
 
@@ -51,8 +50,9 @@ void TCPSender::fill_window() {
 
         new_seg.header().seqno = wrap(_next_seqno, _isn);
 
-        
-        new_seg.payload() = _stream.read(min(num, TCPConfig::MAX_PAYLOAD_SIZE));
+        string payload_read = _stream.read(min(num, TCPConfig::MAX_PAYLOAD_SIZE));
+        new_seg.payload() = Buffer(std::move(payload_read));
+
         num = num - new_seg.payload().size();
 
         if (_stream.eof() && (num > 0)) {
@@ -61,17 +61,15 @@ void TCPSender::fill_window() {
         }
 
         num = num - new_seg.header().fin;
-        length = new_seg.length_in_sequence_space();
-        if (length !=0 ) {
+
+        if (new_seg.length_in_sequence_space() != 0) {
             _segments_out.push(new_seg);
             outstanding_seg.insert({_next_seqno, new_seg});
         }
-        else
-            return;
 
-        seq = seq + length;
-        _next_seqno = _next_seqno + length;
-        flight_bytes = flight_bytes + length;
+        seq = seq + new_seg.length_in_sequence_space();
+        _next_seqno = _next_seqno + new_seg.length_in_sequence_space();
+        flight_bytes = flight_bytes + new_seg.length_in_sequence_space();
 
         if (outstanding_seg.empty()) {
             rto = _initial_retransmission_timeout;
@@ -79,7 +77,7 @@ void TCPSender::fill_window() {
         }
 
         if (_stream.buffer_empty() || num <= 0)
-            return;
+            break;
     }
 }
 
