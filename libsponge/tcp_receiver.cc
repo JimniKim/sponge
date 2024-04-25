@@ -25,11 +25,11 @@ void TCPReceiver::segment_received(const TCPSegment &seg) {
     //    fin = true;
     
     uint64_t abs_index = unwrap(seg.header().seqno + seg.header().syn, isn, _reassembler.stream_out().bytes_written());
-    _reassembler.push_substring(seg.payload().copy(), abs_index - 1, seg.header().fin);
+    _reassembler.push_substring(string(seg.payload().str()), abs_index - 1, seg.header().fin);
 }
 
 optional<WrappingInt32> TCPReceiver::ackno() const {
-    
+
     if (!syn)
         return {};
     
