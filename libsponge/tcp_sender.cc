@@ -87,23 +87,7 @@ void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
     if (new_abs_ackno <= _abs_ackno || new_abs_ackno > _next_seqno)
         return;
     
-    
-
-
-    /*while??
-    while (!_outstanding_segments.empty())
-    {
-        auto it = _outstanding_segments.begin();
-        if (it->seqno + it->segment.length_in_sequence_space() <= _abs_ackno)
-        {
-            flight_bytes = flight_bytes - it->segment.length_in_sequence_space();
-            _outstanding_segments.erase(it);
-        }
-        else
-            break;
-    }
-    */
-    
+    _abs_ackno = new_abs_ackno;
     for (auto it = _outstanding_segments.begin(); it != _outstanding_segments.end();)
         {
             if (it->seqno + it->segment.length_in_sequence_space() <= _abs_ackno)
@@ -118,7 +102,7 @@ void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
         // only restart timer if there are new complete segments confirmed to be received
     
     
-    _abs_ackno = new_abs_ackno;
+    
     _timer.time_elapsed =0;
     _timer.timeout =_initial_retransmission_timeout;
     _n_consec_retransmissions = 0;
