@@ -168,31 +168,42 @@ void TCPConnection::tick(const size_t ms_since_last_tick) {
     if (!active())
         return;
 
+    _last_segm_recv_timer = _last_segm_recv_timer + ms_since_last_tick;
     _sender.tick(ms_since_last_tick);
-    _last_segm_recv_timer += ms_since_last_tick;
-
-    if (debug) {
-        cout << ">> tick! " << ms_since_last_tick << " : " << _last_segm_recv_timer << " / " << 10 * _cfg.rt_timeout
-             << endl;
-    }
-    // if there has been too many consec retx, we need to send a RESET to peer
-    if (_sender.consecutive_retransmissions() > TCPConfig::MAX_RETX_ATTEMPTS) {
-        // if there are no segments ready to be sent out, make an empty segment to send out
-        if (_sender.segments_out().empty())
-            _sender.send_empty_segment();
-        send_segments(true);
-        reset();
-    } else {
-        // to resend a segment if _sender.tick timer expires
+    if (_sender.consecutive_retransmissions()> TCPConfig::MAX_RETX_ATTEMPTS)
+    {
         send_segments();
+        _sender.stream_in().set_error();
+        inbound_stream().set_error(); // set error state
+        _active = false; // kill connection
+        _linger_after_streams_finish = false;
+        return;
+    }
+    else
+        send_segments();
+    
+
+    bool prereq1 = _receiver.unassembled_bytes() ==0 && inbound_stream().input_ended(); // prereq1
+    bool prereq2 = _sender.stream_in().eof() && _sender.next_seqno_absolute() == _sender.stream_in().bytes_written() + 2; // prereq2
+    bool prereq3 = _sender.bytes_in_flight(); // prereq3
+    
+    //if (prereq1 && !_fin)
+    //    _linger_after_streams_finish = false;
+    
+    if (prereq1 && prereq2 && prereq3)
+    {
+        if (_last_segm_recv_timer >= 10* _cfg.rt_timeout && _linger_after_streams_finish) //_linger_after_streams_finish
+        {
+            _active = false; // kill connection
+            _linger_after_streams_finish = false;
+        }
+        if (!_linger_after_streams_finish) // passive close
+        {
+            _active = false;
+        }
+
     }
 
-    if (debug) {
-        cout << "   >> stream out not oef? " << _sender.stream_in().eof() << ": " << _sender.stream_in().input_ended()
-             << " && " << _sender.stream_in().buffer_empty() << endl;
-    }
-    //try_switching_close_mode();
-    try_closing_connection();
 }
 
 TCPConnection::~TCPConnection() {
