@@ -33,31 +33,60 @@ void TCPConnection::connect() {
 }
 
 void TCPConnection::segment_received(const TCPSegment &seg) {
-    _receiver.segment_received(seg);
-    _last_segm_recv_timer = 0;
-
+   _last_segm_recv_timer =0;
     if (seg.header().rst)
-        reset();
-    if (seg.header().ack)
-        _sender.ack_received(seg.header().ackno, seg.header().win);
-    if (debug) {
-        cout << ">> received segm: " << seg.header().summary() << endl;
-        cout << ">> unasmb bytes: " << _receiver.unassembled_bytes() << endl;
+    {
+        _sender.stream_in().set_error();
+        inbound_stream().set_error(); // set error state
+        _active = false; // kill connection
+        //_linger_after_streams_finish = false;
+        return;
     }
-    if (syn_sent()) {
-        // if segment non-empty and we need to return an ack
-        // but no segments are ready to be sent out
-        // make sure at least one segment is sent in reply
-        if (seg.length_in_sequence_space() > 0 && _sender.segments_out().empty()) {
-            if (debug)
-                cout << ">> recv'd non-empty segm but queue empty, make empty segment to ack" << endl;
-            _sender.send_empty_segment();
-        }
+
+    _receiver.segment_received(seg);
+
+    if (seg.header().ack) 
+    {
+        _sender.ack_received(seg.header().ackno, seg.header().win);
         send_segments();
     }
 
-    if (seg.header().syn && !syn_sent())
+    if (seg.length_in_sequence_space()) 
+    {
+        _sender.fill_window();
+        if (_sender.segments_out().empty())
+        {
+            _sender.send_empty_segment();
+            TCPSegment new_seg = _sender.segments_out().front();
+            _sender.segments_out().pop();
+            if (_receiver.ackno().has_value())
+            {
+                new_seg.header().ack = true;
+                new_seg.header().ackno = _receiver.ackno().value();
+            }
+            new_seg.header().win= static_cast<uint16_t>(_receiver.window_size());
+            _segments_out.push (new_seg);
+        }
+        else     
+            send_segments();
+    }
+
+    if (seg.header().syn && !(_sender.next_seqno_absolute() > 0))
         connect();
+
+    //if (_receiver.ackno().has_value() && (seg.length_in_sequence_space()==0 
+    //&& (seg.header().seqno == _receiver.ackno().value() -1))) // keep-alives
+    //{
+    //    _sender.send_empty_segment();
+    //}
+
+    bool prereq1 = _receiver.unassembled_bytes() ==0 && inbound_stream().input_ended(); // prereq1
+    if (prereq1 && !_sender.stream_in().eof())
+        _linger_after_streams_finish = false;
+    
+    
+    return;
+    
 }
 
 size_t TCPConnection::write(const string &data) {
