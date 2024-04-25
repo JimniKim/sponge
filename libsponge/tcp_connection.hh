@@ -1,6 +1,7 @@
-
 #ifndef SPONGE_LIBSPONGE_TCP_FACTORED_HH
 #define SPONGE_LIBSPONGE_TCP_FACTORED_HH
+
+#include <limits>
 
 #include "tcp_config.hh"
 #include "tcp_receiver.hh"
@@ -22,12 +23,8 @@ class TCPConnection {
     //! in case the remote TCPConnection doesn't know we've received its whole stream?
     bool _linger_after_streams_finish{true};
 
-    size_t time_since_last_segment_received_ = 0;
-    bool active_ = true;
-
-    void send_data();
-    void reset_connection();
-
+    size_t _last_seg_time{0};
+    size_t _curr_seg_time{0};
 
   public:
     //! \name "Input" interface for the writer
@@ -75,6 +72,8 @@ class TCPConnection {
 
     //! Called periodically when time elapses
     void tick(const size_t ms_since_last_tick);
+
+    void send_segment();
 
     //! \brief TCPSegments that the TCPConnection has enqueued for transmission.
     //! \note The owner or operating system will dequeue these and
