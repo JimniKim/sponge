@@ -4,8 +4,11 @@
 #include "byte_stream.hh"
 
 #include <cstdint>
-#include <map>
+#include <list>
 #include <string>
+
+// References: Nick Hirning (nhirning) for idea of storing aggregated bytes as
+// one item in data structure and using a struct to store metadata
 
 //! \brief A class that assembles a series of excerpts from a byte stream (possibly out of order,
 //! possibly overlapping) into an in-order byte stream.
@@ -15,14 +18,18 @@ class StreamReassembler {
 
     ByteStream _output;  //!< The reassembled in-order byte stream
     size_t _capacity;    //!< The maximum number of bytes
+    struct Chunk {
+        std::string data;
+        size_t index;
+    };
+    std::list<Chunk> unasmb;
+    size_t first_unasmb;
+    size_t n_unasmb_bytes;
+    bool eof_set;
+    size_t last_byte;
 
-    size_t unassem_bytes;
-    size_t next;       // next start index of stream
-    size_t last_byte;  // last_byte of stream
-    map<size_t, string> unreassem;
-
-    bool _eof;
-    
+    //! \brief Merge any overlapping existing chunks into the new_chunk
+    bool merge(std::list<Chunk> &chunks, Chunk &new_chunk);
 
   public:
     //! \brief Construct a `StreamReassembler` that will store up to `capacity` bytes.
