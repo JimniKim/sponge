@@ -201,7 +201,7 @@ void TCPConnection::tick(const size_t ms_since_last_tick) {
     }
     else
     {
-        //_sender.fill_window();
+        _sender.fill_window();
         send_segments();
     }
         
