@@ -187,15 +187,10 @@ void TCPConnection::tick(const size_t ms_since_last_tick) {
         return;
 
     
-    send_segments();
+    //send_segments();
 
-    //bool active_close = _linger_after_streams_finish && _last_segm_recv_timer >= 10 * _cfg.rt_timeout;
-    //bool passive_close = !_linger_after_streams_finish;
-
-    // prereq 1: inbound stream ended & fully assembled
-    bool prereq1 =inbound_stream().input_ended() && _receiver.unassembled_bytes() == 0;
-
-    // prereq 2 (and 3): outbound stream ended, fully sent (and fully ack'd by remote peer)
+    
+    bool prereq1 = inbound_stream().input_ended() && _receiver.unassembled_bytes() == 0;
     bool prereq2 = _sender.stream_in().eof() && _sender.next_seqno_absolute() == (_sender.stream_in().bytes_written() + 2);
     bool prereq3 = _sender.bytes_in_flight() == 0;
 
