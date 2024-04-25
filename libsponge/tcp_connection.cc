@@ -28,7 +28,7 @@ void TCPConnection::segment_received(const TCPSegment &seg)
         _sender.stream_in().set_error();
         inbound_stream().set_error(); // set error state
         _active = false; // kill connection
-        _linger_after_streams_finish = false;
+        //_linger_after_streams_finish = false;
         return;
     }
 
@@ -37,29 +37,31 @@ void TCPConnection::segment_received(const TCPSegment &seg)
     if (seg.header().ack) 
     {
         _sender.ack_received(seg.header().ackno, seg.header().win);
+        //really_send_seg();
     }
-
     if (seg.length_in_sequence_space()) 
     {
         if (_sender.segments_out().empty())
             _sender.send_empty_segment();
-        _sender.fill_window();
+        //_sender.fill_window();
         really_send_seg();
     }
 
     if (seg.header().syn && !(_sender.next_seqno_absolute() > 0))
         connect();
 
-    if (_receiver.ackno().has_value() && (seg.length_in_sequence_space()==0 
-    && (seg.header().seqno == _receiver.ackno().value() -1))) // keep-alives
-    {
-        _sender.send_empty_segment();
-    }
+    //if (_receiver.ackno().has_value() && (seg.length_in_sequence_space()==0 
+    //&& (seg.header().seqno == _receiver.ackno().value() -1))) // keep-alives
+    //{
+    //    _sender.send_empty_segment();
+    //}
+
     bool prereq1 = _receiver.unassembled_bytes() ==0 && inbound_stream().input_ended(); // prereq1
     if (prereq1 && !_sender.stream_in().eof())
         _linger_after_streams_finish = false;
     
-    really_send_seg();
+    
+    return;
     
 }
 
