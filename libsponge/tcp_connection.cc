@@ -189,8 +189,8 @@ void TCPConnection::tick(const size_t ms_since_last_tick) {
     
     send_segments();
 
-    bool active_close = _linger_after_streams_finish && _last_segm_recv_timer >= 10 * _cfg.rt_timeout;
-    bool passive_close = !_linger_after_streams_finish;
+    //bool active_close = _linger_after_streams_finish && _last_segm_recv_timer >= 10 * _cfg.rt_timeout;
+    //bool passive_close = !_linger_after_streams_finish;
 
     // prereq 1: inbound stream ended & fully assembled
     bool prereq1 =inbound_stream().input_ended() && _receiver.unassembled_bytes() == 0;
