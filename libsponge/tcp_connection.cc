@@ -90,15 +90,10 @@ void TCPConnection::segment_received(const TCPSegment &seg) {
 }
 
 size_t TCPConnection::write(const string &data) {
-    if (_sender.stream_in().input_ended() || !syn_sent())
-        return 0;
-    size_t n_bytes_written = _sender.stream_in().write(data);
-    if (debug)
-        cout << ">> writing " << n_bytes_written << " bytes, " << _sender.stream_in().remaining_capacity()
-             << " bytes remaining." << endl;
+    size_t num_written = _sender.stream_in().write(data);
     _sender.fill_window();
     send_segments();
-    return n_bytes_written;
+    return num_written;
 }
 
 void TCPConnection::reset() {
