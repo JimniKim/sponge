@@ -24,7 +24,7 @@ void TCPReceiver::segment_received(const TCPSegment &seg) {
     
     _reassembler.push_substring(
         string(seg.payload().str()),
-        unwrap(seg.header().seqno - 1 * (!syn), isn, _reassembler.stream_out().bytes_written()),
+        unwrap(seg.header().seqno - 1 * (!seg.header().syn), isn, _reassembler.stream_out().bytes_written()),
         fin);
 }
 
