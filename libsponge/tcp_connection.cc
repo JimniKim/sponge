@@ -37,18 +37,31 @@ void TCPConnection::segment_received(const TCPSegment &seg)
     if (seg.header().ack) 
     {
         _sender.ack_received(seg.header().ackno, seg.header().win);
-        //really_send_seg();
+        really_send_seg();
     }
     if (seg.length_in_sequence_space()) 
     {
+        _sender.fill_window();
         if (_sender.segments_out().empty())
+        {   
             _sender.send_empty_segment();
-        //_sender.fill_window();
-        really_send_seg();
+            TCPSegment new_seg = _sender.segments_out().front();
+            _sender.segments_out().pop();
+            if (_receiver.ackno().has_value())
+            {
+                new_seg.header().ack = true;
+                new_seg.header().ackno = _receiver.ackno().value();
+            }
+            new_seg.header().win= static_cast<uint16_t>(_receiver.window_size());
+            _segments_out.push (new_seg);
+
+        }
+        else
+            really_send_seg();
     }
 
-    if (seg.header().syn && !(_sender.next_seqno_absolute() > 0))
-        connect();
+    //if (seg.header().syn && !(_sender.next_seqno_absolute() > 0))
+    //    connect();
 
     //if (_receiver.ackno().has_value() && (seg.length_in_sequence_space()==0 
     //&& (seg.header().seqno == _receiver.ackno().value() -1))) // keep-alives
@@ -57,9 +70,19 @@ void TCPConnection::segment_received(const TCPSegment &seg)
     //}
 
     bool prereq1 = _receiver.unassembled_bytes() ==0 && inbound_stream().input_ended(); // prereq1
+    bool prereq2 = _sender.stream_in().eof() && _sender.next_seqno_absolute() == (_sender.stream_in().bytes_written() + 2);
+    bool prereq3 = _sender.bytes_in_flight() == 0;
+
     if (prereq1 && !_sender.stream_in().eof())
         _linger_after_streams_finish = false;
     
+    if (prereq1 && prereq2 && prereq3)
+    {
+        if (_last_segm_recv_timer >= 10 * _cfg.rt_timeout && _linger_after_streams_finish)
+            _active = false;
+        else if (!_linger_after_streams_finish)
+            _active = false;
+    }
     
     return;
     
