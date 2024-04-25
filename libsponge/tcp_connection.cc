@@ -188,6 +188,7 @@ void TCPConnection::tick(const size_t ms_since_last_tick) {
 
     
     send_segments();
+
     bool active_close = _linger_after_streams_finish && _last_segm_recv_timer >= 10 * _cfg.rt_timeout;
     bool passive_close = !_linger_after_streams_finish;
 
@@ -198,10 +199,12 @@ void TCPConnection::tick(const size_t ms_since_last_tick) {
     bool prereq2 = _sender.stream_in().eof() && _sender.next_seqno_absolute() == (_sender.stream_in().bytes_written() + 2);
     bool prereq3 = _sender.bytes_in_flight() == 0;
 
-    
-    if ((active_close || passive_close) && prereq1 && prereq2 && prereq3) {
-        
-        _active = false;
+    if (prereq1 && prereq2 && prereq3)
+    {
+        if (active_close)
+            _active = false;
+        else if (passive_close)
+            _active = false;
     }
     
 
