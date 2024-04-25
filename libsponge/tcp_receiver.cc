@@ -11,11 +11,15 @@ void DUMMY_CODE(Targs &&... /* unused */) {}
 using namespace std;
 
 void TCPReceiver::segment_received(const TCPSegment &seg) {
-    if (isn == nullopt && !seg.header().syn) 
+    if (!syn && !seg.header().syn) 
         return;
 
-    if (seg.header().syn)
+    else if (seg.header().syn)
+    {
         isn = seg.header().seqno;
+        syn = true;
+    }
+        
 
     //if (seg.header().fin && _reassembler.stream_out().input_ended()) 
     //    fin = true;
