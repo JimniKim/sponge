@@ -31,8 +31,8 @@ void get_URL(const string &host, const string &path) {
          << "\r\n";
     ostr << "\r\n";
     tcp.write(ostr.str());
-    //server_send = tcp.read();
-    // cout << server_send;
+    server_send = tcp.read();
+    cout << server_send;
     // cout << tcp.read();
     while (!tcp.eof()) {
         server_send = tcp.read();
