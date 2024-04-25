@@ -121,7 +121,7 @@ void TCPConnection::tick(const size_t ms_since_last_tick) {
 
     if (_sender.consecutive_retransmissions() > TCPConfig::MAX_RETX_ATTEMPTS) {
         // abort the connnection
-        _sender.send_empty_rst();
+        really_send_seg_rst();
         _sender.stream_in().set_error();
         _receiver.stream_out().set_error();
     } 
@@ -150,10 +150,26 @@ TCPConnection::~TCPConnection() {
             cerr << "Warning: Unclean shutdown of TCPConnection\n";
 
             // Your code here: need to send a RST segment to the peer
-            _sender.send_empty_rst();
+            really_send_seg_rst();
             send_segment();
         }
     } catch (const exception &e) {
         std::cerr << "Exception destructing TCP FSM: " << e.what() << std::endl;
     }
+}
+void TCPConnection::really_send_seg_rst()
+{
+    if (_sender.segments_out().empty() == false)
+        _sender.send_empty_segment();
+    TCPSegment new_seg = _sender.segments_out().front();
+    _sender.segments_out().pop();
+    if (_receiver.ackno().has_value())
+    {
+        new_seg.header().ack = true;
+        new_seg.header().ackno = _receiver.ackno().value();
+    }
+    new_seg.header().win= static_cast<uint16_t>(_receiver.window_size());
+    new_seg.header().rst = true;
+    _segments_out.push (new_seg);
+    
 }

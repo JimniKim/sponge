@@ -25,6 +25,7 @@ class TCPConnection {
 
     size_t _last_seg_time{0};
     size_t _curr_seg_time{0};
+    void really_send_seg_rst();
 
   public:
     //! \name "Input" interface for the writer
