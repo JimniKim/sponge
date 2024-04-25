@@ -78,12 +78,12 @@ void TCPConnection::segment_received(const TCPSegment &seg)
     
     if (prereq1 && prereq2 && prereq3)
     {
-        if (_last_segm_recv_timer >= 10 * _cfg.rt_timeout && _linger_after_streams_finish)
+        if (last_time >= 10 * _cfg.rt_timeout && _linger_after_streams_finish)
             _active = false;
         else if (!_linger_after_streams_finish)
             _active = false;
     }
-    
+
     return;
     
 }
