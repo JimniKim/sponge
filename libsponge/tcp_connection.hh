@@ -37,7 +37,8 @@ class TCPConnection {
     //! if stream is active, try to send segments from sender's output queue
     //! set ackno and window size if available from receiver
     //! set RST flag if applicable
-    void send_segments(bool rst = false);
+    void send_segments();
+    void send_segments_rst();
 
     //! check conditions for a clean shutdown, set connection to inactive if met
     void try_closing_connection();

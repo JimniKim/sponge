@@ -108,7 +108,7 @@ void TCPConnection::try_switching_close_mode() {
 }
 
 //\param[in] rst is false by default, true a reset flag needs to be sent out
-void TCPConnection::send_segments(bool rst) {
+void TCPConnection::send_segments() {
     while (_sender.segments_out().empty() == false)
     {
         TCPSegment new_seg = _sender.segments_out().front();
@@ -120,11 +120,25 @@ void TCPConnection::send_segments(bool rst) {
         }
 
         new_seg.header().win= static_cast<uint16_t>(_receiver.window_size());
-        
         _segments_out.push (new_seg);
 
     }
 }
+ void TCPConnection::send_segments_rst()
+ {
+    if (_sender.segments_out().empty() == false)
+        _sender.send_empty_segment();
+    TCPSegment new_seg = _sender.segments_out().front();
+    _sender.segments_out().pop();
+    if (_receiver.ackno().has_value())
+    {
+        new_seg.header().ack = true;
+        new_seg.header().ackno = _receiver.ackno().value();
+    }
+    new_seg.header().win= static_cast<uint16_t>(_receiver.window_size());
+    new_seg.header().rst = true;
+    _segments_out.push (new_seg);
+ }
 
 void TCPConnection::try_closing_connection() {
     if (!active())
@@ -167,7 +181,7 @@ void TCPConnection::tick(const size_t ms_since_last_tick) {
     _sender.tick(ms_since_last_tick);
     if (_sender.consecutive_retransmissions()> TCPConfig::MAX_RETX_ATTEMPTS)
     {
-        send_segments(true);
+        send_segments_rst();
         _sender.stream_in().set_error();
         inbound_stream().set_error(); // set error state
         _active = false; // kill connection
@@ -199,7 +213,7 @@ TCPConnection::~TCPConnection() {
             cerr << "Warning: Unclean shutdown of TCPConnection\n";
             if (_sender.segments_out().empty())
                 _sender.send_empty_segment();
-            send_segments(true);
+            send_segments_rst();
             reset();
         }
     } catch (const exception &e) {
