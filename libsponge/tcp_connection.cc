@@ -24,7 +24,7 @@ bool TCPConnection::active() const { return _active; }
 void TCPConnection::end_input_stream() {
     _sender.stream_in().end_input();
     _sender.fill_window();
-    send_segments();  // send_segments() called in try_closing_connection()
+    send_segments();  
 }
 
 void TCPConnection::connect() {
@@ -71,8 +71,8 @@ void TCPConnection::segment_received(const TCPSegment &seg) {
             send_segments();
     }
 
-    if (seg.header().syn && !(_sender.next_seqno_absolute() > 0))
-        connect();
+    //if (seg.header().syn && !(_sender.next_seqno_absolute() > 0))
+    //    connect();
 
     //if (_receiver.ackno().has_value() && (seg.length_in_sequence_space()==0 
     //&& (seg.header().seqno == _receiver.ackno().value() -1))) // keep-alives
@@ -81,8 +81,19 @@ void TCPConnection::segment_received(const TCPSegment &seg) {
     //}
 
     bool prereq1 = _receiver.unassembled_bytes() ==0 && inbound_stream().input_ended(); // prereq1
+    bool prereq2 = _sender.stream_in().eof() && _sender.next_seqno_absolute() == (_sender.stream_in().bytes_written() + 2);
+    bool prereq3 = _sender.bytes_in_flight() == 0;
+
     if (prereq1 && !_sender.stream_in().eof())
         _linger_after_streams_finish = false;
+    
+    if (prereq1 && prereq2 && prereq3)
+    {
+        if (_last_segm_recv_timer >= 10 * _cfg.rt_timeout && _linger_after_streams_finish)
+            _active = false;
+        else if (!_linger_after_streams_finish)
+            _active = false;
+    }
     
     
     return;
@@ -189,7 +200,11 @@ void TCPConnection::tick(const size_t ms_since_last_tick) {
         return;
     }
     else
+    {
+        _sender.fill_window();
         send_segments();
+    }
+        
     
     
     bool prereq1 = inbound_stream().input_ended() && _receiver.unassembled_bytes() == 0;
