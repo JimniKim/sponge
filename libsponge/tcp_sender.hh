@@ -19,19 +19,6 @@
 class TCPSender {
   private:
     //! Retransmission timer
-    struct Timer {
-        size_t time_elapsed;
-        size_t timeout;
-
-        //! return true if time elapsed exceeds the timeout we set
-        bool expired() { return time_elapsed >= timeout; }
-
-        //! start a timer that expires after new_timeout milliseconds
-        void start(size_t new_timeout) {
-            time_elapsed = 0;
-            timeout = new_timeout;
-        }
-    };
 
     //! our initial sequence number, the number for our SYN.
     WrappingInt32 _isn;
@@ -47,12 +34,8 @@ class TCPSender {
 
     //! the (absolute) sequence number for the next byte to be sent
     uint64_t _next_seqno{0};
+    
 
-    //! the (absolute) sequence number of the first byte the receiver has received
-    uint64_t _abs_ackno{0};
-
-    //! window size the receiver is expecting
-    size_t _window_size{1};
 
     //! segment with their corresponding seqno
     struct OrderedSegment {
@@ -61,16 +44,13 @@ class TCPSender {
     };
 
     //! segments sent but not yet acknowledged by receiver, sorted by absolute seqno
-    std::list<OrderedSegment> _outstanding_segments;
-
-    //! retransmission timer
-    Timer _timer;
-
-    //! number of times we've sent the same segment
-    size_t _n_consec_retransmissions{0};
-
-    //! enable cout statements for debugging
-    bool debug{false};
+    std::list<OrderedSegment> outstanding_seg;
+    size_t _window_size{1};
+    uint64_t absolute_ackno {0};
+    unsigned int consecutive_retran {0};
+    unsigned int rto;
+    unsigned int time_passed{0};
+    uint64_t flight_bytes{0};
 
   public:
     //! Initialize a TCPSender

@@ -18,13 +18,13 @@ TCPSender::TCPSender(const size_t capacity, const uint16_t retx_timeout, const s
     : _isn(fixed_isn.value_or(WrappingInt32{random_device()()}))
     , _initial_retransmission_timeout{retx_timeout}
     , _stream(capacity)
-    , _outstanding_segments()
-    , _timer{0, retx_timeout} {}
+    , outstanding_seg()
+    , rto(retx_timeout) {}
 
-uint64_t TCPSender::bytes_in_flight() const { return _next_seqno - _abs_ackno; }
+uint64_t TCPSender::bytes_in_flight() const { return _next_seqno - absolute_ackno; }
 
 void TCPSender::fill_window() {
-    while (_next_seqno <= _abs_ackno + _window_size) {
+    while (_next_seqno <= absolute_ackno + _window_size) {
         // this means we've already sent the segment with FIN flag
         if (_stream.eof() && _next_seqno >= _stream.bytes_written() + 2)
             return;
@@ -63,12 +63,16 @@ void TCPSender::fill_window() {
         if (seg.length_in_sequence_space() == 0)
             return;
         _segments_out.push(seg);
-        _outstanding_segments.push_back(OrderedSegment{_next_seqno, seg});
+        outstanding_seg.push_back(OrderedSegment{_next_seqno, seg});
         _next_seqno += seg.length_in_sequence_space();
 
         // if the timer isn't running, start it with the original rtto
-        if (_timer.expired())
-            _timer.start(_initial_retransmission_timeout);
+        if (time_passed >= rto)
+        {
+            rto = _initial_retransmission_timeout;
+            time_passed = 0;
+        }
+            
     }
 }
 
@@ -77,51 +81,45 @@ void TCPSender::fill_window() {
 void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_size) {
     _window_size = window_size;  // update window size even if we get a wacko ackno?
 
-    uint64_t new_abs_ackno = unwrap(ackno, _isn, _abs_ackno);
-    if (new_abs_ackno <= _abs_ackno || new_abs_ackno > _next_seqno)
+    uint64_t new_abs_ackno = unwrap(ackno, _isn, absolute_ackno);
+    if (new_abs_ackno <= absolute_ackno || new_abs_ackno > _next_seqno)
         return;
-    _abs_ackno = new_abs_ackno;
+    absolute_ackno = new_abs_ackno;
 
-    for (auto it = _outstanding_segments.begin();
-         it != _outstanding_segments.end() && it->seqno + it->segment.length_in_sequence_space() <= _abs_ackno;
-         it = _outstanding_segments.erase(it))
+    for (auto i = outstanding_seg.begin(); i != outstanding_seg.end();) {
+        if (i->seqno + i->segment.length_in_sequence_space() <= absolute_ackno) {
+            flight_bytes = flight_bytes - i->segment.length_in_sequence_space();
+            i = outstanding_seg.erase(i);
+        } else
+            break;
+    }
 
         // only restart timer if there are new complete segments confirmed to be received
-        _timer.start(_initial_retransmission_timeout);
-    _n_consec_retransmissions = 0;
+    rto = _initial_retransmission_timeout;
+    consecutive_retran = 0;
+    time_passed = 0;
     fill_window();
 }
 
 //! \param[in] ms_since_last_tick the number of milliseconds since the last call to this method
 void TCPSender::tick(const size_t ms_since_last_tick) {
-    _timer.time_elapsed += ms_since_last_tick;
-    if (debug)
-        cout << ">> timer at: " << _timer.time_elapsed << " / " << _timer.timeout << endl;
-    if (_timer.expired()) {
-        if (debug)
-            cout << ">> >> timer expired!" << endl;
-        // retransmit earliest segment not fully acknowledged
-        if (!_outstanding_segments.empty()) {
-            if (debug)
-                cout << ">> >> resending segm: " << _outstanding_segments.begin()->segment.header().summary() << endl;
-            _segments_out.push(_outstanding_segments.begin()->segment);
+    time_passed = time_passed + ms_since_last_tick;
 
-            // only backoff if we had to resend a segment
-            if (_window_size > 0) {
-                _n_consec_retransmissions++;
-                _timer.timeout *= 2;
-            }
-            _timer.start(_timer.timeout);
+    if ((time_passed >= rto) && (!outstanding_seg.empty())) {
+        _segments_out.push(outstanding_seg.begin()->segment);
+        if (_window_size > 0) {
+            consecutive_retran++;
+            rto = rto * 2;
         }
+
+        time_passed = 0;
     }
 }
 
-unsigned int TCPSender::consecutive_retransmissions() const { return _n_consec_retransmissions; }
+unsigned int TCPSender::consecutive_retransmissions() const { return consecutive_retran; }
 
 void TCPSender::send_empty_segment() {
-    TCPHeader hdr;
-    TCPSegment seg;
-    hdr.seqno = wrap(_next_seqno, _isn);  // always set seqno
-    seg.header() = hdr;
-    _segments_out.push(seg);
+    TCPSegment new_seg;
+    new_seg.header().seqno = wrap(_next_seqno, _isn);
+    _segments_out.push(new_seg);
 }
