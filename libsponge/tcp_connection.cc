@@ -44,7 +44,7 @@ void TCPConnection::segment_received(const TCPSegment &seg) {
 
         // at least one segment is sent in reply
         if (seg.length_in_sequence_space() && _sender.segments_out().empty()) {  
-            _sender.send_empty_ack();
+            _sender.send_empty_segment();
         }
     
         send_segment();
