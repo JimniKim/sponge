@@ -47,6 +47,8 @@ class TCPSender {
     unsigned int rto;
     unsigned int time_passed{0};
     uint64_t flight_bytes{0};
+    bool _fin {false};
+    bool start {false};
 
   public:
     //! Initialize a TCPSender

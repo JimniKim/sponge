@@ -24,47 +24,50 @@ TCPSender::TCPSender(const size_t capacity, const uint16_t retx_timeout, const s
 uint64_t TCPSender::bytes_in_flight() const { return _next_seqno - absolute_ackno; }
 
 void TCPSender::fill_window() {
-    while (_next_seqno <= absolute_ackno + _window_size) {
+    size_t num = _window_size ? _window_size - bytes_in_flight() : 1;
+    size_t length =0;
+    if (_window_size == 0 && bytes_in_flight() != 0)
+        num = 0;
+    while ((num > 0 && _fin == false) ) {
         // this means we've already sent the segment with FIN flag
-        if (_stream.eof() && _next_seqno >= _stream.bytes_written() + 2)
-            return;
+        
 
-        uint16_t n_bytes_to_send = _window_size - bytes_in_flight();
+        TCPSegment new_seg;
 
-        // if space left to fill in window is more than the max payload
-        // or we sent out more bytes than the window size, n_bytes_to_send overflows
-
-        // if the receiver reports a window size of 0 but we have stuff to send
-        if (_window_size == 0 && bytes_in_flight() == 0)
-            n_bytes_to_send = 1;
-
-        TCPHeader hdr;
-        hdr.seqno = wrap(_next_seqno, _isn);
-        if (_next_seqno == 0 && n_bytes_to_send > 0) {
-            hdr.syn = true;
-            n_bytes_to_send--;
+        if (start == false) {
+            new_seg.header().syn = true;
+            start = true;
+            num = num - 1;
         }
 
-        if (n_bytes_to_send > TCPConfig::MAX_PAYLOAD_SIZE)
-            n_bytes_to_send = TCPConfig::MAX_PAYLOAD_SIZE;
+        new_seg.header().seqno = wrap(_next_seqno, _isn);
+
+        
 
         // fill as many bytes as we can from the stream
-        TCPSegment seg;
-        seg.payload() = _stream.read(n_bytes_to_send);
-        n_bytes_to_send = n_bytes_to_send == TCPConfig::MAX_PAYLOAD_SIZE ? 1 : n_bytes_to_send - seg.payload().size();
+        
+        new_seg.payload() = _stream.read(min(num, TCPConfig::MAX_PAYLOAD_SIZE));
+        num = num - new_seg.payload().size();
 
         // include the FIN flag if it fits
-        if (_stream.eof() && (n_bytes_to_send > 0))
-            hdr.fin = true;
-
-        seg.header() = hdr;
+        if (_stream.eof() && (num > 0)){
+            new_seg.header().fin = true;
+            _fin = true;
+        }
+            
 
         // if the segment is empty (no flags or data) don't send
-        if (seg.length_in_sequence_space() == 0)
+        length = new_seg.length_in_sequence_space();
+        if (length)
+        {
+            _segments_out.push(new_seg);
+            outstanding_seg.insert({_next_seqno, new_seg});
+        }
+        else
             return;
-        _segments_out.push(seg);
-        outstanding_seg.insert({_next_seqno, seg});
-        _next_seqno += seg.length_in_sequence_space();
+        
+        _next_seqno = _next_seqno + length;
+        flight_bytes = flight_bytes + length;
 
         // if the timer isn't running, start it with the original rtto
         if (time_passed >= rto)
