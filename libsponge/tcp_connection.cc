@@ -32,9 +32,10 @@ void TCPConnection::segment_received(const TCPSegment &seg) {
     bool send_empty = false;
     if (_sender.next_seqno_absolute() > 0 && seg.header().ack) {
         // unacceptable ACKs should produced a segment that existed
-        if (!_sender.ack_received(seg.header().ackno, seg.header().win)) {
-            send_empty = true;
-        }
+        _sender.ack_received(seg.header().ackno, seg.header().win)
+        //if (!_sender.ack_received(seg.header().ackno, seg.header().win)) {
+        //    send_empty = true;
+        //}
     }
 
     bool recv_flag = _receiver.segment_received(seg);
