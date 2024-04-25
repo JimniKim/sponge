@@ -22,15 +22,8 @@ TCPSender::TCPSender(const size_t capacity, const uint16_t retx_timeout, const s
     : _isn(fixed_isn.value_or(WrappingInt32{random_device()()}))
     , _initial_retransmission_timeout{retx_timeout}
     , _stream(capacity)
-    , _window_size(1)
-    , _ackno(wrap(0, _isn).raw_value())
-    , consecutive_retran(0)
-    , seq(_isn.raw_value())
-    , rto(_initial_retransmission_timeout)
-    , time_passed(0)
-    , start(false)
-    , _fin(false)
-    , flight_bytes(0) {}
+    , rto(_initial_retransmission_timeout){}
+    
 
 uint64_t TCPSender::bytes_in_flight() const { return flight_bytes; }
 
@@ -40,9 +33,8 @@ void TCPSender::fill_window() {
     if (_window_size == 0 && bytes_in_flight() != 0)
         num = 0;
 
-    while ((num > 0 && _fin == false) || _stream.buffer_empty()) {
-        if (_stream.eof() && _next_seqno >= _stream.bytes_written() + 2)
-            return;
+    while ((num > 0 && _fin == false) ) {
+        
 
         TCPSegment new_seg;
 
@@ -73,11 +65,10 @@ void TCPSender::fill_window() {
         else 
             return;
 
-        seq = seq + length;
         _next_seqno = _next_seqno + length;
         flight_bytes = flight_bytes + length;
 
-        if (outstanding_seg.empty()) {
+        if (time_passed >= rto) {
             rto = _initial_retransmission_timeout;
             time_passed = 0;
         }
@@ -90,39 +81,24 @@ void TCPSender::fill_window() {
 //! \param ackno The remote receiver's ackno (acknowledgment number)
 //! \param window_size The remote receiver's advertised window size
 void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_size) {
-    if (ackno.raw_value() == _ackno.raw_value()) {
-        _window_size = window_size;
-        _ackno = ackno;
-        return;
-    } else if (seq < ackno.raw_value() ||
-               (seq != ackno.raw_value() &&
-                (_ackno.raw_value() + (outstanding_seg.begin()->second.length_in_sequence_space()) !=
-                 ackno.raw_value())))
+    size_t new_ack = unwrap (ackno, _isn, _next_seqno);
+    _window_size = window_size;
+    if (new_ack <= absolute_ackno || new_ack > _next_seqno)
         return;
 
-
-    while (!outstanding_seg.empty())
-    {
-        auto i = outstanding_seg.begin();
-        if (i->first + i->second.length_in_sequence_space() <= unwrap(ackno, _isn, _next_seqno)) {
-            flight_bytes = flight_bytes - i->second.length_in_sequence_space();
-            outstanding_seg.erase(i);
-        }
-        else
-            break;
-    }   
-    /* 
+    absolute_ackno = new_ack;
+    
+    
     for (auto i = outstanding_seg.begin(); i != outstanding_seg.end();) {
-        if (i->first + i->second.length_in_sequence_space() <= unwrap(ackno, _isn, _next_seqno)) {
+        if (i->first + i->second.length_in_sequence_space() <= absolute_ackno) {
             flight_bytes = flight_bytes - i->second.length_in_sequence_space();
             i = outstanding_seg.erase(i);
         } else
             break;
     }
-    */
+    
 
-    _window_size = window_size;
-    _ackno = ackno;
+    
 
     rto = _initial_retransmission_timeout;
     consecutive_retran = 0;

@@ -34,15 +34,14 @@ class TCPSender {
     uint64_t _next_seqno{0};
 
     map<uint64_t, TCPSegment> outstanding_seg{};  // store outstanding segments
-    size_t _window_size;
-    WrappingInt32 _ackno;
-    unsigned int consecutive_retran;
-    uint32_t seq;
+    size_t _window_size {1};
+    uint64_t absolute_ackno {0};
+    unsigned int consecutive_retran {0};
     unsigned int rto;
-    unsigned int time_passed;
-    bool start;
-    bool _fin;
-    uint64_t flight_bytes;
+    unsigned int time_passed{0};
+    bool start {false};
+    bool _fin {false};
+    uint64_t flight_bytes{0};
 
   public:
     //! Initialize a TCPSender
