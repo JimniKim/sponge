@@ -68,12 +68,17 @@ void TCPSender::fill_window() {
         seg.header() = hdr;
 
         // if the segment is empty (no flags or data) don't send
-        if (seg.length_in_sequence_space() == 0)
+        size_t length = seg.length_in_sequence_space();
+        if (length)
+        {
+            _segments_out.push(seg);
+            _outstanding_segments.push_back(OrderedSegment{_next_seqno, seg});
+        }
+        else
             return;
-        _segments_out.push(seg);
-        _outstanding_segments.push_back(OrderedSegment{_next_seqno, seg});
-        _next_seqno += seg.length_in_sequence_space();
-        flight_bytes = flight_bytes + seg.length_in_sequence_space();
+        
+        _next_seqno += length;
+        flight_bytes = flight_bytes + length;
 
         // if the timer isn't running, start it with the original rtto
         if (_timer.time_elapsed >= _timer.timeout )  // done
