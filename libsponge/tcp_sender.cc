@@ -81,10 +81,10 @@ void TCPSender::fill_window() {
 void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_size) {
     _window_size = window_size;  // update window size even if we get a wacko ackno?
 
-    uint64_t new_abs_ackno = unwrap(ackno, _isn, absolute_ackno);
-    if (new_abs_ackno <= absolute_ackno || new_abs_ackno > _next_seqno)
+    uint64_t abs_new_ack = unwrap(ackno, _isn, absolute_ackno);
+    if (abs_new_ack <= absolute_ackno || abs_new_ack > _next_seqno)
         return;
-    absolute_ackno = new_abs_ackno;
+    absolute_ackno = abs_new_ack;
 
     for (auto i = outstanding_seg.begin(); i != outstanding_seg.end();) {
         if (i->first + i->second.length_in_sequence_space() <= absolute_ackno) {
