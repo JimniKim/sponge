@@ -201,9 +201,9 @@ void TCPConnection::tick(const size_t ms_since_last_tick) {
 
     if (prereq1 && prereq2 && prereq3)
     {
-        if (active_close)
+        if (_last_segm_recv_timer >= 10 * _cfg.rt_timeout && _linger_after_streams_finish)
             _active = false;
-        else if (passive_close)
+        else if (!_linger_after_streams_finish)
             _active = false;
     }
     
