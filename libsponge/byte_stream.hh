@@ -48,8 +48,8 @@ class ByteStream {
 
     //! Indicate that the stream suffered an error.
     void set_error() {
-        if (buffer.bad() || buffer.fail())
-            _error = true;
+        
+        _error = true;
     }
     //!@}
 
