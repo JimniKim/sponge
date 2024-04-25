@@ -71,8 +71,8 @@ void TCPConnection::segment_received(const TCPSegment &seg) {
             send_segments();
     }
 
-    if (seg.header().syn && !(_sender.next_seqno_absolute() > 0))
-        connect();
+    //if (seg.header().syn && !(_sender.next_seqno_absolute() > 0))
+    //    connect();
 
     //if (_receiver.ackno().has_value() && (seg.length_in_sequence_space()==0 
     //&& (seg.header().seqno == _receiver.ackno().value() -1))) // keep-alives
