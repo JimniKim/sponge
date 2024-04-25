@@ -41,6 +41,9 @@ void TCPSender::fill_window() {
         num = 0;
 
     while (num > 0 && _fin == false) {
+        if (_stream.eof() && _next_seqno >= _stream.bytes_written() + 2)
+            return;
+
         TCPSegment new_seg;
 
         if (start == false) {
@@ -51,8 +54,7 @@ void TCPSender::fill_window() {
 
         new_seg.header().seqno = wrap(_next_seqno, _isn);
 
-        //string payload_read = _stream.read(min(num, TCPConfig::MAX_PAYLOAD_SIZE));
-        //new_seg.payload() = Buffer(std::move(payload_read));
+        
         new_seg.payload() = _stream.read(min(num, TCPConfig::MAX_PAYLOAD_SIZE));
         num = num - new_seg.payload().size();
 
@@ -68,6 +70,8 @@ void TCPSender::fill_window() {
             _segments_out.push(new_seg);
             outstanding_seg.insert({_next_seqno, new_seg});
         }
+        else 
+            return;
 
         seq = seq + length;
         _next_seqno = _next_seqno + length;
