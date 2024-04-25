@@ -51,9 +51,9 @@ void TCPSender::fill_window() {
 
         new_seg.header().seqno = wrap(_next_seqno, _isn);
 
-        string payload_read = _stream.read(min(num, TCPConfig::MAX_PAYLOAD_SIZE));
-        new_seg.payload() = Buffer(std::move(payload_read));
-
+        //string payload_read = _stream.read(min(num, TCPConfig::MAX_PAYLOAD_SIZE));
+        //new_seg.payload() = Buffer(std::move(payload_read));
+        new_seg.payload() = _stream.read(min(num, TCPConfig::MAX_PAYLOAD_SIZE));
         num = num - new_seg.payload().size();
 
         if (_stream.eof() && (num > 0)) {
@@ -79,7 +79,7 @@ void TCPSender::fill_window() {
         }
 
         if (_stream.buffer_empty() || num <= 0)
-            break;
+            return;
     }
 }
 
