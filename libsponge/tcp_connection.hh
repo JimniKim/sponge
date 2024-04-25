@@ -1,3 +1,4 @@
+
 #ifndef SPONGE_LIBSPONGE_TCP_FACTORED_HH
 #define SPONGE_LIBSPONGE_TCP_FACTORED_HH
 
@@ -10,8 +11,8 @@
 class TCPConnection {
   private:
     TCPConfig _cfg;
-    TCPReceiver _receiver{_cfg.recv_capacity};
-    TCPSender _sender{_cfg.send_capacity, _cfg.rt_timeout, _cfg.fixed_isn};
+    TCPReceiver receiver{_cfg.recv_capacity};
+    TCPSender sender{_cfg.send_capacity, _cfg.rt_timeout, _cfg.fixed_isn};
 
     //! outbound queue of segments that the TCPConnection wants sent
     std::queue<TCPSegment> _segments_out{};
@@ -21,17 +22,12 @@ class TCPConnection {
     //! in case the remote TCPConnection doesn't know we've received its whole stream?
     bool _linger_after_streams_finish{true};
 
-    size_t _time_since_last_segment_received = 0;
-    bool _active = true;
-    bool _need_send_rst = false;
-    bool _ack_for_fin_sent = false;
+    size_t time_since_last_segment_received_ = 0;
+    bool active_ = true;
 
-    bool push_segments_out(bool send_syn = false);
-    void unclean_shutdown(bool send_rst);
-    bool clean_shutdown();
-    bool in_listen();
-    bool in_syn_recv();
-    bool in_syn_sent();
+    void send_data();
+    void reset_connection();
+
 
   public:
     //! \name "Input" interface for the writer
