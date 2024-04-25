@@ -18,20 +18,6 @@
 //! segments if the retransmission timer expires.
 class TCPSender {
   private:
-    //! Retransmission timer
-    struct Timer {
-        size_t time_elapsed;
-        size_t timeout;
-
-        //! return true if time elapsed exceeds the timeout we set
-        //bool expired() { return time_elapsed >= timeout; }
-
-        //! start a timer that expires after new_timeout milliseconds
-        //void start(size_t new_timeout) {
-        //    time_elapsed = 0;
-        //    timeout = new_timeout;
-        //}
-    };
 
     //! our initial sequence number, the number for our SYN.
     WrappingInt32 _isn;
