@@ -172,11 +172,11 @@ void TCPConnection::tick(const size_t ms_since_last_tick) {
     _sender.tick(ms_since_last_tick);
     if (_sender.consecutive_retransmissions()> TCPConfig::MAX_RETX_ATTEMPTS)
     {
-        send_segments();
+        send_segments(true);
         _sender.stream_in().set_error();
         inbound_stream().set_error(); // set error state
         _active = false; // kill connection
-        _linger_after_streams_finish = false;
+        //_linger_after_streams_finish = false;
         return;
     }
     else
@@ -195,7 +195,6 @@ void TCPConnection::tick(const size_t ms_since_last_tick) {
         if (ms_since_last_tick >= 10* _cfg.rt_timeout && _linger_after_streams_finish) //_linger_after_streams_finish
         {
             _active = false; // kill connection
-            _linger_after_streams_finish = false;
         }
         if (!_linger_after_streams_finish) // passive close
         {
