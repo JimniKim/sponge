@@ -21,7 +21,7 @@ TCPSender::TCPSender(const size_t capacity, const uint16_t retx_timeout, const s
     , outstanding_seg()
     , rto(retx_timeout) {}
 
-uint64_t TCPSender::bytes_in_flight() const { return _next_seqno - absolute_ackno; }
+uint64_t TCPSender::bytes_in_flight() const { return flight_bytes; }
 
 void TCPSender::fill_window() {
     size_t num = _window_size ? _window_size - bytes_in_flight() : 1;
