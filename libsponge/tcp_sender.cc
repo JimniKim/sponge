@@ -40,7 +40,7 @@ void TCPSender::fill_window() {
     if (_window_size == 0 && bytes_in_flight() != 0)
         num = 0;
 
-    while (num > 0 && _fin == false || _stream.buffer_empty()) {
+    while ((num > 0 && _fin == false) || _stream.buffer_empty()) {
         if (_stream.eof() && _next_seqno >= _stream.bytes_written() + 2)
             return;
 
