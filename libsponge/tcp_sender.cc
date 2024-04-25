@@ -25,39 +25,43 @@ uint64_t TCPSender::bytes_in_flight() const { return _next_seqno - _abs_ackno; }
 
 void TCPSender::fill_window() {
     
-    //size_t num = _window_size ? _window_size - bytes_in_flight() : 1;
-    while (_next_seqno <= _abs_ackno + _window_size) {
+    size_t num = _window_size ? _window_size - bytes_in_flight() : 1;
+    if (_window_size == 0 && bytes_in_flight() != 0)
+        num = 0;
+    while (num > 0 && _fin == false) {
         // this means we've already sent the segment with FIN flag
-        if (_stream.eof() && _next_seqno >= _stream.bytes_written() + 2)
-            return;
+        //if (_stream.eof() && _next_seqno >= _stream.bytes_written() + 2)
+        //    return;
 
-        uint16_t n_bytes_to_send = _window_size - bytes_in_flight();
+        //uint16_t n_bytes_to_send = _window_size - bytes_in_flight();
 
         // if space left to fill in window is more than the max payload
         // or we sent out more bytes than the window size, n_bytes_to_send overflows
 
         // if the receiver reports a window size of 0 but we have stuff to send
-        if (_window_size == 0 && bytes_in_flight() == 0)
-            n_bytes_to_send = 1;
+        //if (_window_size == 0 && bytes_in_flight() == 0)
+        //    n_bytes_to_send = 1;
 
         TCPHeader hdr;
         hdr.seqno = wrap(_next_seqno, _isn);
-        if (_next_seqno == 0 && n_bytes_to_send > 0) {
+        if (!start) {
             hdr.syn = true;
-            n_bytes_to_send--;
+            num = num - 1;
         }
 
-        if (n_bytes_to_send > TCPConfig::MAX_PAYLOAD_SIZE)
-            n_bytes_to_send = TCPConfig::MAX_PAYLOAD_SIZE;
+        
 
         // fill as many bytes as we can from the stream
         TCPSegment seg;
-        seg.payload() = _stream.read(n_bytes_to_send);
-        n_bytes_to_send = n_bytes_to_send == TCPConfig::MAX_PAYLOAD_SIZE ? 1 : n_bytes_to_send - seg.payload().size();
+        seg.payload() =  _stream.read(min(num, TCPConfig::MAX_PAYLOAD_SIZE));
+         num = num - seg.payload().size();
 
         // include the FIN flag if it fits
-        if (_stream.eof() && (n_bytes_to_send > 0))
+        if (_stream.eof() && (num > 0))
+        {
             hdr.fin = true;
+            _fin = true;
+        }
 
         seg.header() = hdr;
 

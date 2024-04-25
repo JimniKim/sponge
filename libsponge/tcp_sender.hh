@@ -70,6 +70,8 @@ class TCPSender {
     size_t _n_consec_retransmissions{0};
 
     uint64_t flight_bytes{0};
+    bool start {false};
+    bool _fin {false};
 
   public:
     //! Initialize a TCPSender
