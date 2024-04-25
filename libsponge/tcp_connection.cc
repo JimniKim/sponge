@@ -199,11 +199,14 @@ void TCPConnection::tick(const size_t ms_since_last_tick) {
         //_linger_after_streams_finish = false;
         return;
     }
-    else
-    {
+    else if (_receiver.ackno().has_value()) { 
         _sender.fill_window();
-        send_segments();
     }
+    
+    
+        
+    send_segments();
+   
         
     
     
