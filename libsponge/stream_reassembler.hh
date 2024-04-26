@@ -1,67 +1,110 @@
-#ifndef SPONGE_LIBSPONGE_STREAM_REASSEMBLER_HH
-#define SPONGE_LIBSPONGE_STREAM_REASSEMBLER_HH
+#ifndef SPONGE_LIBSPONGE_TCP_SENDER_HH
+#define SPONGE_LIBSPONGE_TCP_SENDER_HH
 
 #include "byte_stream.hh"
+#include "tcp_config.hh"
+#include "tcp_segment.hh"
+#include "wrapping_integers.hh"
 
-#include <cstdint>
-#include <list>
-#include <string>
+#include <functional>
+#include <map>
+#include <queue>
 
-// References: Nick Hirning (nhirning) for idea of storing aggregated bytes as
-// one item in data structure and using a struct to store metadata
+//! \brief The "sender" part of a TCP implementation.
 
-//! \brief A class that assembles a series of excerpts from a byte stream (possibly out of order,
-//! possibly overlapping) into an in-order byte stream.
-class StreamReassembler {
+//! Accepts a ByteStream, divides it up into segments and sends the
+//! segments, keeps track of which segments are still in-flight,
+//! maintains the Retransmission Timer, and retransmits in-flight
+//! segments if the retransmission timer expires.
+class TCPSender {
   private:
-    // Your code here -- add private members as necessary.
+    //! Retransmission timer
 
-    ByteStream _output;  //!< The reassembled in-order byte stream
-    size_t _capacity;    //!< The maximum number of bytes
-    struct Chunk {
-        std::string data;
-        size_t index;
-    };
-    std::list<Chunk> unasmb;
-    size_t first_unasmb;
-    size_t n_unasmb_bytes;
-    bool eof_set;
-    size_t last_byte;
+    //! our initial sequence number, the number for our SYN.
+    WrappingInt32 _isn;
 
-    //! \brief Merge any overlapping existing chunks into the new_chunk
-    bool merge(std::list<Chunk> &chunks, Chunk &new_chunk);
+    //! outbound queue of segments that the TCPSender wants sent
+    std::queue<TCPSegment> _segments_out{};
+
+    //! retransmission timer for the connection
+    unsigned int _initial_retransmission_timeout;
+
+    //! outgoing stream of bytes that have not yet been sent
+    ByteStream _stream;
+
+    //! the (absolute) sequence number for the next byte to be sent
+    uint64_t _next_seqno{0};
+    
+
+
+
+
+    //! segments sent but not yet acknowledged by receiver, sorted by absolute seqno
+    map <uint64_t, TCPSegment> outstanding_seg{};
+    size_t _window_size{1};
+    uint64_t absolute_ackno {0};
+    unsigned int consecutive_retran {0};
+    unsigned int rto;
+    unsigned int time_passed{0};
+    uint64_t flight_bytes{0};
+    bool _fin {false};
+    bool start {false};
 
   public:
-    //! \brief Construct a `StreamReassembler` that will store up to `capacity` bytes.
-    //! \note This capacity limits both the bytes that have been reassembled,
-    //! and those that have not yet been reassembled.
-    StreamReassembler(const size_t capacity);
+    //! Initialize a TCPSender
+    TCPSender(const size_t capacity = TCPConfig::DEFAULT_CAPACITY,
+              const uint16_t retx_timeout = TCPConfig::TIMEOUT_DFLT,
+              const std::optional<WrappingInt32> fixed_isn = {});
 
-    //! \brief Receive a substring and write any newly contiguous bytes into the stream.
-    //!
-    //! The StreamReassembler will stay within the memory limits of the `capacity`.
-    //! Bytes that would exceed the capacity are silently discarded.
-    //!
-    //! \param data the substring
-    //! \param index indicates the index (place in sequence) of the first byte in `data`
-    //! \param eof the last byte of `data` will be the last byte in the entire stream
-    void push_substring(const std::string &data, const uint64_t index, const bool eof);
-
-    //! \name Access the reassembled byte stream
+    //! \name "Input" interface for the writer
     //!@{
-    const ByteStream &stream_out() const { return _output; }
-    ByteStream &stream_out() { return _output; }
+    ByteStream &stream_in() { return _stream; }
+    const ByteStream &stream_in() const { return _stream; }
     //!@}
 
-    //! The number of bytes in the substrings stored but not yet reassembled
-    //!
-    //! \note If the byte at a particular index has been pushed more than once, it
-    //! should only be counted once for the purpose of this function.
-    size_t unassembled_bytes() const;
+    //! \name Methods that can cause the TCPSender to send a segment
+    //!@{
 
-    //! \brief Is the internal state empty (other than the output stream)?
-    //! \returns `true` if no substrings are waiting to be assembled
-    bool empty() const;
+    //! \brief A new acknowledgment was received
+    void ack_received(const WrappingInt32 ackno, const uint16_t window_size);
+
+    //! \brief Generate an empty-payload segment (useful for creating empty ACK segments)
+    void send_empty_segment();
+
+    //! \brief create and send segments to fill as much of the window as possible
+    void fill_window();
+
+    //! \brief Notifies the TCPSender of the passage of time
+    void tick(const size_t ms_since_last_tick);
+    //!@}
+
+    //! \name Accessors
+    //!@{
+
+    //! \brief How many sequence numbers are occupied by segments sent but not yet acknowledged?
+    //! \note count is in "sequence space," i.e. SYN and FIN each count for one byte
+    //! (see TCPSegment::length_in_sequence_space())
+    size_t bytes_in_flight() const;
+
+    //! \brief Number of consecutive retransmissions that have occurred in a row
+    unsigned int consecutive_retransmissions() const;
+
+    //! \brief TCPSegments that the TCPSender has enqueued for transmission.
+    //! \note These must be dequeued and sent by the TCPConnection,
+    //! which will need to fill in the fields that are set by the TCPReceiver
+    //! (ackno and window size) before sending.
+    std::queue<TCPSegment> &segments_out() { return _segments_out; }
+    //!@}
+
+    //! \name What is the next sequence number? (used for testing)
+    //!@{
+
+    //! \brief absolute seqno for the next byte to be sent
+    uint64_t next_seqno_absolute() const { return _next_seqno; }
+
+    //! \brief relative seqno for the next byte to be sent
+    WrappingInt32 next_seqno() const { return wrap(_next_seqno, _isn); }
+    //!@}
 };
 
-#endif  // SPONGE_LIBSPONGE_STREAM_REASSEMBLER_HH
+#endif  // SPONGE_LIBSPONGE_TCP_SENDER_HH
