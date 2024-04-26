@@ -4,7 +4,7 @@
 #include "byte_stream.hh"
 
 #include <cstdint>
-#include <map>
+#include <deque>
 #include <string>
 
 //! \brief A class that assembles a series of excerpts from a byte stream (possibly out of order,
@@ -16,13 +16,11 @@ class StreamReassembler {
     ByteStream _output;  //!< The reassembled in-order byte stream
     size_t _capacity;    //!< The maximum number of bytes
 
-    size_t unassem_bytes{0};
-    size_t next{0};       // next start index of stream
-    size_t last_byte{0};  // last_byte of stream
-    map<size_t, string> unreassem {};
-
-    bool _eof {false};
-    // class를 새로 만들자!! -> index와 data를 같이 저장할 수 있도록!... 일단 고민을 좀 더 해보자ㅏ
+    size_t unassembled_bytes_; // 未发送至output_的数据大小
+    std::deque<char> datas_; // 数据
+    std::deque<bool> write_flag_; // 该数据位是否已经写入
+    size_t next_index_; // 下一个要写入的index
+    bool is_eof_; // 是否收到eof位
 
   public:
     //! \brief Construct a `StreamReassembler` that will store up to `capacity` bytes.
