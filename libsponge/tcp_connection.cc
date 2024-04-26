@@ -60,14 +60,13 @@ void TCPConnection::segment_received(const TCPSegment &seg)
             really_send_seg();
     }
 
-    //if (seg.header().syn && !(_sender.next_seqno_absolute() > 0))
-    //    connect();
+    
 
-    //if (_receiver.ackno().has_value() && (seg.length_in_sequence_space()==0 
-    //&& (seg.header().seqno == _receiver.ackno().value() -1))) // keep-alives
-    //{
-    //    _sender.send_empty_segment();
-    //}
+    if (_receiver.ackno().has_value() && (seg.length_in_sequence_space()==0 
+    && (seg.header().seqno == _receiver.ackno().value() -1))) // keep-alives
+    {
+        _sender.send_empty_segment();
+    }
 
     bool prereq1 = _receiver.unassembled_bytes() ==0 && inbound_stream().input_ended(); // prereq1
     bool prereq2 = _sender.stream_in().eof() && _sender.next_seqno_absolute() == (_sender.stream_in().bytes_written() + 2);
