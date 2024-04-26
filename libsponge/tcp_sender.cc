@@ -89,7 +89,8 @@ void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
     size_t new_ack = unwrap (ackno, _isn, _next_seqno);
     _window_size = window_size;
     
-    if (new_ack <= absolute_ackno || new_ack > _next_seqno)
+    if (new_ack <= absolute_ackno 
+    || new_ack <= absolute_ackno && new_ack >= outstanding_seg.begin() -> first)
         return;
 
     absolute_ackno = new_ack;
