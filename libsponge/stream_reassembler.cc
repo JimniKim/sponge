@@ -1,65 +1,60 @@
-#include "stream_reassembler.hh"
+#ifndef SPONGE_LIBSPONGE_STREAM_REASSEMBLER_HH
+#define SPONGE_LIBSPONGE_STREAM_REASSEMBLER_HH
 
-// Dummy implementation of a stream reassembler.
+#include "byte_stream.hh"
 
-// For Lab 1, please replace with a real implementation that passes the
-// automated checks run by `make check_lab1`.
+#include <cstdint>
+#include <map>
+#include <string>
 
-// You will need to add private members to the class declaration in `stream_reassembler.hh`
+//! \brief A class that assembles a series of excerpts from a byte stream (possibly out of order,
+//! possibly overlapping) into an in-order byte stream.
+class StreamReassembler {
+  private:
+    // Your code here -- add private members as necessary.
 
-template <typename... Targs>
-void DUMMY_CODE(Targs &&... /* unused */) {}
+    ByteStream _output;  //!< The reassembled in-order byte stream
+    size_t _capacity;    //!< The maximum number of bytes
 
-using namespace std;
+    size_t unassem_bytes;
+    size_t next;       // next start index of stream
+    size_t last_byte;  // last_byte of stream
+    map<size_t, string> unreassem;
 
-StreamReassembler::StreamReassembler(const size_t capacity)
-    : _output(capacity), _capacity(capacity) {}
+    bool _eof;
+    // class를 새로 만들자!! -> index와 data를 같이 저장할 수 있도록!... 일단 고민을 좀 더 해보자ㅏ
 
-//! \details This function accepts a substring (aka a segment) of bytes,
-//! possibly out-of-order, from the logical stream, and assembles any newly
-//! contiguous substrings and writes them into the output stream in order.
-void StreamReassembler::push_substring(const string &data, const size_t index, const bool eof) {
-    if (index >= next_index_ + _output.remaining_capacity()) {
-       return;
-   }
-   // 设置eof标志
-   if (eof && index + data.size() <= next_index_ + _output.remaining_capacity()) {
-       is_eof_ = true;
-   }
-   // 如果所有数据都已经保存过了，那就跳过
-   if (index + data.size() > next_index_) {
-       // 将数据保存到datas_中，从index和next_index_中更大的一方开始，避免无用循环
-       for (size_t i = (index > next_index_ ? index : next_index_);
-            i < next_index_ + _output.remaining_capacity() && i < index + data.size();
-            i++) {
-           if (!write_flag_[i - next_index_]) {
-               datas_[i - next_index_] = data[i - index];
-               write_flag_[i - next_index_] = true;
-               unassembled_bytes_++;
-           }
-       }
-       // 将已经有序的数据发送到字节流中
-       string out_str;
-       while (write_flag_.front()) {
-           out_str += datas_.front();
-           datas_.pop_front();
-           datas_.push_back('\0');
-           write_flag_.pop_front();
-           write_flag_.push_back(false);
-       }
-       size_t out_len = out_str.size();
-       if (out_len > 0) {
-           unassembled_bytes_ -= out_len;
-           next_index_ += out_len;
-           _output.write(out_str);
-       }
-   }
-   // 如果输入结束且所有数据都发送了，则结束字节流
-   if (is_eof_ && empty()) {
-       _output.end_input();
-   }
-}
+  public:
+    //! \brief Construct a `StreamReassembler` that will store up to `capacity` bytes.
+    //! \note This capacity limits both the bytes that have been reassembled,
+    //! and those that have not yet been reassembled.
+    StreamReassembler(const size_t capacity);
 
-size_t StreamReassembler::unassembled_bytes() const { return unassembled_bytes_; }
+    //! \brief Receive a substring and write any newly contiguous bytes into the stream.
+    //!
+    //! The StreamReassembler will stay within the memory limits of the `capacity`.
+    //! Bytes that would exceed the capacity are silently discarded.
+    //!
+    //! \param data the substring
+    //! \param index indicates the index (place in sequence) of the first byte in `data`
+    //! \param eof the last byte of `data` will be the last byte in the entire stream
+    void push_substring(const std::string &data, const uint64_t index, const bool eof);
 
-bool StreamReassembler::empty() const { return datas_.empty(); }
+    //! \name Access the reassembled byte stream
+    //!@{
+    const ByteStream &stream_out() const { return _output; }
+    ByteStream &stream_out() { return _output; }
+    //!@}
+
+    //! The number of bytes in the substrings stored but not yet reassembled
+    //!
+    //! \note If the byte at a particular index has been pushed more than once, it
+    //! should only be counted once for the purpose of this function.
+    size_t unassembled_bytes() const;
+
+    //! \brief Is the internal state empty (other than the output stream)?
+    //! \returns `true` if no substrings are waiting to be assembled
+    bool empty() const;
+};
+
+#endif  // SPONGE_LIBSPONGE_STREAM_REASSEMBLER_HH
