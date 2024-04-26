@@ -16,12 +16,12 @@ class StreamReassembler {
     ByteStream _output;  //!< The reassembled in-order byte stream
     size_t _capacity;    //!< The maximum number of bytes
 
-    size_t unassem_bytes;
-    size_t next;       // next start index of stream
-    size_t last_byte;  // last_byte of stream
-    map<size_t, string> unreassem;
+    size_t unassem_bytes{0};
+    size_t next {0};       // next start index of stream
+    size_t last_byte{0};  // last_byte of stream
+    map<size_t, string> unreassem {};
 
-    bool _eof;
+    bool _eof {false};
     // class를 새로 만들자!! -> index와 data를 같이 저장할 수 있도록!... 일단 고민을 좀 더 해보자ㅏ
 
   public:
