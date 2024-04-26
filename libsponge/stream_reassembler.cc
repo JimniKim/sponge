@@ -12,8 +12,7 @@ void DUMMY_CODE(Targs &&... /* unused */) {}
 
 using namespace std;
 
-StreamReassembler::StreamReassembler(const size_t capacity)
-    : _output(capacity), _capacity(capacity) {}
+StreamReassembler::StreamReassembler(const size_t capacity) : _output(capacity), _capacity(capacity) {}
 
 //! \details This function accepts a substring (aka a segment) of bytes,
 //! possibly out-of-order, from the logical stream, and assembles any newly
@@ -47,8 +46,8 @@ void StreamReassembler::push_substring(const string &data, const size_t index, c
     temp = _data;
 
     for (auto a = unreassem.begin(); a != unreassem.end();) {
-        size_t curr_s = a -> first;
-        size_t curr_f = a-> first + a -> second.size();
+        size_t curr_s = a->first;
+        size_t curr_f = a->first + a->second.size();
         size_t new_f = new_index + temp.size();
 
         if (curr_s <= new_index && curr_f >= new_f)
@@ -56,37 +55,34 @@ void StreamReassembler::push_substring(const string &data, const size_t index, c
 
         if (curr_s <= new_index && new_index <= curr_f && new_f > curr_f) {
             temp = a->second.substr(0, new_index - curr_s) + temp;
-            unassem_bytes = unassem_bytes - (curr_f-curr_s);
+            unassem_bytes = unassem_bytes - (curr_f - curr_s);
             new_index = curr_s;
             unreassem.erase(a++);
 
-        } else if (curr_s <= new_f && new_f <= curr_f && new_index <curr_s) {
+        } else if (curr_s <= new_f && new_f <= curr_f && new_index < curr_s) {
             temp = temp.substr(0, curr_s - new_index) + a->second;
             if (curr_s == last_byte)
                 last_byte = new_index;
-            unassem_bytes = unassem_bytes -(curr_f-curr_s);
+            unassem_bytes = unassem_bytes - (curr_f - curr_s);
             unreassem.erase(a++);
         } else if (curr_s >= new_index && curr_f <= new_f) {
             temp = temp;
-            unassem_bytes = unassem_bytes - (curr_f-curr_s);
+            unassem_bytes = unassem_bytes - (curr_f - curr_s);
             unreassem.erase(a++);
 
         } else
             ++a;
     }
-    
+
     if (new_index == next)
         next = next + _output.write(temp);
-    else
-    {
+    else {
         unreassem.insert({new_index, temp});
         unassem_bytes = unassem_bytes + temp.size();
     }
-    
+
     if (next >= last_byte && _eof)
         _output.end_input();
-        
-    
 }
 
 size_t StreamReassembler::unassembled_bytes() const { return unassem_bytes; }

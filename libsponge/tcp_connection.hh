@@ -23,8 +23,8 @@ class TCPConnection {
     void really_send_seg_rst();
     void really_send_seg();
     size_t last_time{0};
-    bool _active {true};
-    bool _fin {false};
+    bool _active{true};
+    bool _fin{false};
 
   public:
     //! \name "Input" interface for the writer

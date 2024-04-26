@@ -47,10 +47,7 @@ class ByteStream {
     void end_input();
 
     //! Indicate that the stream suffered an error.
-    void set_error() {
-        
-        _error = true;
-    }
+    void set_error() { _error = true; }
     //!@}
 
     //! \name "Output" interface for the reader

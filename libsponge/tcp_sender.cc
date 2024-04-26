@@ -25,19 +25,15 @@ TCPSender::TCPSender(const size_t capacity, const uint16_t retx_timeout, const s
     , outstanding_seg()
     , rto(_initial_retransmission_timeout) {}
 
-
 uint64_t TCPSender::bytes_in_flight() const { return _next_seqno - absolute_ackno; }
 
 void TCPSender::fill_window() {
-
     size_t num = _window_size ? _window_size - bytes_in_flight() : 1;
-    
+
     if (_window_size == 0 && bytes_in_flight() != 0)
         num = 0;
-    
+
     while (num > 0 && _fin == false) {
-
-
         TCPSegment new_seg;
 
         if (start == false) {
@@ -48,11 +44,9 @@ void TCPSender::fill_window() {
 
         new_seg.header().seqno = wrap(_next_seqno, _isn);
 
-
         new_seg.payload() = _stream.read(min(num, TCPConfig::MAX_PAYLOAD_SIZE));
         num = num - new_seg.payload().size();
 
-       
         if (_stream.eof() && (num > 0)) {
             new_seg.header().fin = true;
             _fin = true;
@@ -61,15 +55,13 @@ void TCPSender::fill_window() {
         num = num - new_seg.header().fin;
 
         size_t length = new_seg.length_in_sequence_space();
-        if (length)
-        {
+        if (length) {
             _segments_out.push(new_seg);
             outstanding_seg.insert({_next_seqno, new_seg});
         }
-        
-        else 
+
+        else
             return;
-        
 
         _next_seqno = _next_seqno + length;
         flight_bytes = flight_bytes + length;
@@ -78,38 +70,30 @@ void TCPSender::fill_window() {
             rto = _initial_retransmission_timeout;
             time_passed = 0;
         }
-
     }
 }
 
 //! \param ackno The remote receiver's ackno (acknowledgment number)
 //! \param window_size The remote receiver's advertised window size
 void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_size) {
-  
-    size_t new_ack = unwrap (ackno, _isn, _next_seqno);
+    size_t new_ack = unwrap(ackno, _isn, _next_seqno);
     _window_size = window_size;
-    
-    if (new_ack <= absolute_ackno 
-    || (new_ack <= absolute_ackno && new_ack >= outstanding_seg.begin() -> first) 
-    || new_ack > _next_seqno)
+
+    if (new_ack <= absolute_ackno || (new_ack <= absolute_ackno && new_ack >= outstanding_seg.begin()->first) ||
+        new_ack > _next_seqno)
         return;
 
     absolute_ackno = new_ack;
 
-    for (auto it = outstanding_seg.begin(); it != outstanding_seg.end();)
-        {
-            if (it->first + it->second.length_in_sequence_space() <= absolute_ackno)
-            {
-                flight_bytes = flight_bytes - it->second.length_in_sequence_space();
-                it = outstanding_seg.erase(it);
-            }
-            else
-                break;
-        }
+    for (auto it = outstanding_seg.begin(); it != outstanding_seg.end();) {
+        if (it->first + it->second.length_in_sequence_space() <= absolute_ackno) {
+            flight_bytes = flight_bytes - it->second.length_in_sequence_space();
+            it = outstanding_seg.erase(it);
+        } else
+            break;
+    }
 
-        // only restart timer if there are new complete segments confirmed to be received
-
-    
+    // only restart timer if there are new complete segments confirmed to be received
 
     rto = _initial_retransmission_timeout;
     consecutive_retran = 0;
