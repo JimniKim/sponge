@@ -19,7 +19,7 @@ class StreamReassembler {
     size_t unassem_bytes {0};
     size_t next {0};       // next start index of stream
     size_t last_byte {0};  // last_byte of stream
-    map<size_t, string> unreassem{0};
+    map<size_t, string> unreassem{};
 
     bool _eof {false};
     
