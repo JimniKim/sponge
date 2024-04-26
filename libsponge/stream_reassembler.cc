@@ -23,8 +23,8 @@ void StreamReassembler::push_substring(const string &data, const size_t index, c
     string temp;
     string _data;
 
-    if (_output.input_ended())
-        return;
+    //if (_output.input_ended())
+    //    return;
 
     if (eof) {
         last_byte = new_index;
@@ -44,9 +44,7 @@ void StreamReassembler::push_substring(const string &data, const size_t index, c
         new_index = next;
         if (eof)
             last_byte = new_index;
-        // next = next + _output.write(_data.substr(next-index));
-        // if (index == last_byte && _eof)
-        //        _output.end_input();
+        
     } else if (index < next && index + _data.size() <= next)  // totally overlapping
         return;
 
