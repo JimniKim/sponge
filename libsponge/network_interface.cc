@@ -33,14 +33,70 @@ void NetworkInterface::send_datagram(const InternetDatagram &dgram, const Addres
     // convert IP address of next hop to raw 32-bit representation (used in ARP header)
     const uint32_t next_hop_ip = next_hop.ipv4_numeric();
 
-    DUMMY_CODE(dgram, next_hop, next_hop_ip);
+    EthernetFrame send_frame;
+
+    if (!dgram.header().dst) ///known
+    {
+        send_frame.header().type = EthernetHeader :: TYPE_IPv4;
+        send_frame.payload() = dgram.serialize();
+        _frames_out.push(send_frame);
+    }
+    else
+    {
+        send_frame.header().type = EthernetHeader :: TYPE_ARP;
+        send_frame.header().src = _ethernet_address;
+        send_frame.header().dst = ETHERNET_BROADCAST;
+        ARPMessage arp;
+        arp.opcode = ARPMessage::OPCODE_REQUEST;
+        arp.sender_ethernet_address = _ethernet_address;
+        arp.sender_ip_address = _ip_address.ipv4_numeric();
+        arp.target_ip_address = next_hop_ip;
+        send_frame.payload() = arp.serialize();
+        _frames_out.push(send_frame);
+    }
+
+
+    
 }
 
 //! \param[in] frame the incoming Ethernet frame
 optional<InternetDatagram> NetworkInterface::recv_frame(const EthernetFrame &frame) {
-    DUMMY_CODE(frame);
-    return {};
+    
+    InternetDatagram result;
+    if (!(frame.header().dst == _ethernet_address ||frame.header().dst == ETHERNET_BROADCAST))
+        return nullopt;
+        
+    if (frame.header().type == EthernetHeader :: TYPE_ARP)
+    {
+        ARPMessage arp;
+        if (arp.parse(frame.payload()) == ParseResult::NoError)
+        {
+            mapping.push({arp.sender_ip_address, arp.sender_ethernet_address}); // for 30secs
+            if (arp.target_ip_address == _ip_address.ipv4_numeric())
+                arp.target_ethernet_address = _ethernet_address;
+            
+            EthernetFrame send_frame;
+            send_frame.header() = frame.header();
+            send_frame.payload() = arp.serialize();
+            if (result.parse(frame.payload()) == ParseResult::NoError)
+                return result;
+        }
+            
+    }
+    else if (frame.header().type == EthernetHeader :: TYPE_IPv4)
+    {
+        if (result.parse(frame.payload()) == ParseResult::NoError)
+            return result;
+    }
+    return nullopt;
 }
 
 //! \param[in] ms_since_last_tick the number of milliseconds since the last call to this method
-void NetworkInterface::tick(const size_t ms_since_last_tick) { DUMMY_CODE(ms_since_last_tick); }
+void NetworkInterface::tick(const size_t ms_since_last_tick) 
+{ 
+    for (auto i)
+    {
+        if (ms_since_last_tick < )
+        expire
+    }
+}
