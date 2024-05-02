@@ -65,11 +65,11 @@ optional<InternetDatagram> NetworkInterface::recv_frame(const EthernetFrame &fra
     InternetDatagram result;
     if (!(frame.header().dst == _ethernet_address ||frame.header().dst == ETHERNET_BROADCAST))
         return nullopt;
-        
+
     if (frame.header().type == EthernetHeader :: TYPE_ARP)
     {
         ARPMessage arp;
-        if (arp.parse(frame.payload()) == ParseResult::NoError)
+        if (arp.parse(Buffer(frame.payload())) == ParseResult::NoError)
         {
             mapping.push({arp.sender_ip_address, arp.sender_ethernet_address}); // for 30secs
             if (arp.target_ip_address == _ip_address.ipv4_numeric())
@@ -85,7 +85,8 @@ optional<InternetDatagram> NetworkInterface::recv_frame(const EthernetFrame &fra
     }
     else if (frame.header().type == EthernetHeader :: TYPE_IPv4)
     {
-        if (result.parse(frame.payload()) == ParseResult::NoError)
+        InternetDatagram result;
+        if (result.parse(Buffer(frame.payload())) == ParseResult::NoError)
             return result;
     }
     return nullopt;
