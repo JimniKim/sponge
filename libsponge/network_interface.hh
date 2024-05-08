@@ -52,10 +52,12 @@ class NetworkInterface {
 
     std::map<uint32_t, Ethernet_addr> mapping{};
     std::map<uint32_t, Sent_arp> already_sent_ARP{};
-
+    EthernetFrame create_ethernet_frame (const EthernetAddress & dst_addr, uint16_t ether_type);
+    ARPMessage create_arp_msg (uint16_t opcode, uint32_t target_ip, bool known = false, const EthernetAddress & target_ether = {});
   public:
     //! \brief Construct a network interface with given Ethernet (network-access-layer) and IP (internet-layer) addresses
     NetworkInterface(const EthernetAddress &ethernet_address, const Address &ip_address);
+
 
     //! \brief Access queue of Ethernet frames awaiting transmission
     std::queue<EthernetFrame> &frames_out() { return _frames_out; }
