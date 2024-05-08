@@ -56,7 +56,7 @@ void NetworkInterface::send_datagram(const InternetDatagram &dgram, const Addres
             Sent_arp temp;
             temp.queue_time=0;
             temp.waiting_apply.push(dgram);
-            already_sent_ARP.push({next_hop_ip, temp});
+            already_sent_ARP.insert({next_hop_ip, temp});
         }
         send_frame.header().type = EthernetHeader :: TYPE_ARP;
         send_frame.header().src = _ethernet_address;
@@ -95,7 +95,7 @@ optional<InternetDatagram> NetworkInterface::recv_frame(const EthernetFrame &fra
             else
             {
                 Ethernet_addr temp {arp.sender_ethernet_address, 0};
-                mapping.push({arp.sender_ip_address, temp}); // for 30secs
+                mapping.insert({arp.sender_ip_address, temp}); // for 30secs
             }
             
             auto b = already_sent_ARP.find(arp.sender_ip_address);
@@ -143,9 +143,25 @@ optional<InternetDatagram> NetworkInterface::recv_frame(const EthernetFrame &fra
 //! \param[in] ms_since_last_tick the number of milliseconds since the last call to this method
 void NetworkInterface::tick(const size_t ms_since_last_tick) 
 { 
-    for (auto i)
+    for (auto i = mapping.begin(); i != mapping.end();) 
     {
-        if (ms_since_last_tick < )
-        expire
+        i->second.passing_time += ms_since_last_tick;
+        if (i->second.passing_time >= 30)
+            i = mapping.erase(i);
+        else 
+            i++;
+
     }
+
+
+    for (auto i =already_sent_ARP.begin(); i != already_sent_ARP.end();) 
+    {
+        i->second.queue_time += ms_since_last_tick;
+        if (i->second.queue_time >= 5)
+            i = already_sent_ARP.erase(i);
+        else 
+            i++;
+
+    }
+
 }
