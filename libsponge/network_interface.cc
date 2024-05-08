@@ -36,11 +36,11 @@ void NetworkInterface::send_datagram(const InternetDatagram &dgram, const Addres
     auto a = mapping.find(next_hop_ip);
     if (a != mapping.end())  // known
     {
-        EthernetFrame send_frame = create_ethernet_frame (a->second.ether,EthernetHeader ::TYPE_IPv4);
+        EthernetFrame send_frame = create_ethernet_frame(a->second.ether, EthernetHeader ::TYPE_IPv4);
         send_frame.payload() = dgram.serialize();
         _frames_out.push(send_frame);
         return;
-    } else {                //unknown
+    } else {  // unknown
         auto b = already_sent_ARP.find(next_hop_ip);
         if (b != already_sent_ARP.end() && b->second.queue_time <= 5000)
             return;
@@ -52,10 +52,10 @@ void NetworkInterface::send_datagram(const InternetDatagram &dgram, const Addres
             temp.waiting_apply.push(dgram);
             already_sent_ARP.insert({next_hop_ip, temp});
         }
-        EthernetFrame send_frame = create_ethernet_frame (ETHERNET_BROADCAST,EthernetHeader ::TYPE_ARP);
+        EthernetFrame send_frame = create_ethernet_frame(ETHERNET_BROADCAST, EthernetHeader ::TYPE_ARP);
         send_frame.header().type = EthernetHeader ::TYPE_ARP;
 
-        ARPMessage arp = create_arp_msg(ARPMessage::OPCODE_REQUEST, next_hop_ip, _ethernet_address);
+        ARPMessage arp = create_arp_msg(ARPMessage::OPCODE_REQUEST, next_hop_ip);
 
         send_frame.payload() = arp.serialize();
         _frames_out.push(send_frame);
@@ -82,7 +82,8 @@ optional<InternetDatagram> NetworkInterface::recv_frame(const EthernetFrame &fra
             auto b = already_sent_ARP.find(arp.sender_ip_address);
             if (b != already_sent_ARP.end())
                 while (!(b->second.waiting_apply.empty())) {
-                    EthernetFrame temp_ether = create_ethernet_frame (arp.sender_ethernet_address,EthernetHeader ::TYPE_IPv4);
+                    EthernetFrame temp_ether =
+                        create_ethernet_frame(arp.sender_ethernet_address, EthernetHeader ::TYPE_IPv4);
                     temp_ether.payload() = b->second.waiting_apply.front().serialize();
                     _frames_out.push(temp_ether);
 
@@ -90,10 +91,11 @@ optional<InternetDatagram> NetworkInterface::recv_frame(const EthernetFrame &fra
                 }
 
             if (arp.opcode == arp.OPCODE_REQUEST && arp.target_ip_address == _ip_address.ipv4_numeric()) {
-                EthernetFrame send_frame = create_ethernet_frame(arp.sender_ethernet_address, EthernetHeader ::TYPE_ARP);
+                EthernetFrame send_frame =
+                    create_ethernet_frame(arp.sender_ethernet_address, EthernetHeader ::TYPE_ARP);
 
-                ARPMessage new_arp = create_arp_msg(new_arp.OPCODE_REPLY, arp.sender_ip_address, arp.sender_ethernet_address, true);
-
+                ARPMessage new_arp =
+                    create_arp_msg(new_arp.OPCODE_REPLY, arp.sender_ip_address, arp.sender_ethernet_address, true);
 
                 send_frame.payload() = new_arp.serialize();
                 _frames_out.push(send_frame);
@@ -127,18 +129,19 @@ void NetworkInterface::tick(const size_t ms_since_last_tick) {
     }
 }
 
-EthernetFrame NetworkInterface:: create_ethernet_frame (const EthernetAddress & dst_addr, uint16_t ether_type)
-{
+EthernetFrame NetworkInterface::create_ethernet_frame(const EthernetAddress &dst_addr, uint16_t ether_type) {
     EthernetFrame new_ether;
 
     new_ether.header().type = ether_type;
     new_ether.header().src = _ethernet_address;
     new_ether.header().dst = dst_addr;
 
-    return  new_ether;
+    return new_ether;
 }
-ARPMessage NetworkInterface::create_arp_msg (uint16_t opcode, uint32_t target_ip, const EthernetAddress & target_ether, bool known = false)
-{
+ARPMessage NetworkInterface::create_arp_msg(uint16_t opcode,
+                                            uint32_t target_ip,
+                                            const EthernetAddress &target_ether,
+                                            bool known) {
     ARPMessage new_arp;
     new_arp.opcode = opcode;
     new_arp.sender_ip_address = _ip_address.ipv4_numeric();

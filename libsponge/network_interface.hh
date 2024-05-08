@@ -1,10 +1,11 @@
 #ifndef SPONGE_LIBSPONGE_NETWORK_INTERFACE_HH
 #define SPONGE_LIBSPONGE_NETWORK_INTERFACE_HH
 
+#include "arp_message.hh"
 #include "ethernet_frame.hh"
 #include "tcp_over_ip.hh"
 #include "tun.hh"
-#include "arp_message.hh"
+
 #include <map>
 #include <optional>
 #include <queue>
@@ -52,12 +53,15 @@ class NetworkInterface {
 
     std::map<uint32_t, Ethernet_addr> mapping{};
     std::map<uint32_t, Sent_arp> already_sent_ARP{};
-    EthernetFrame create_ethernet_frame (const EthernetAddress & dst_addr, uint16_t ether_type);
-    ARPMessage create_arp_msg (uint16_t opcode, uint32_t target_ip, const EthernetAddress & target_ether, bool known = false);
+    EthernetFrame create_ethernet_frame(const EthernetAddress &dst_addr, uint16_t ether_type);
+    ARPMessage create_arp_msg(uint16_t opcode,
+                              uint32_t target_ip,
+                              const EthernetAddress &target_ether = {},
+                              bool known = false);
+
   public:
     //! \brief Construct a network interface with given Ethernet (network-access-layer) and IP (internet-layer) addresses
     NetworkInterface(const EthernetAddress &ethernet_address, const Address &ip_address);
-
 
     //! \brief Access queue of Ethernet frames awaiting transmission
     std::queue<EthernetFrame> &frames_out() { return _frames_out; }
