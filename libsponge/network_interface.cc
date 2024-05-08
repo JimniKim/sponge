@@ -102,7 +102,14 @@ optional<InternetDatagram> NetworkInterface::recv_frame(const EthernetFrame &fra
             if (b!= already_sent_ARP.end())
             while (!(b -> second.waiting_apply.empty()))
             {
-                send_datagram (b->second.waiting_apply.front(),arp.sender_ethernet_address);
+                EthernetFrame temp_ether;
+
+                temp_ether.header().type = EthernetHeader :: TYPE_IPv4;
+                temp_ether.header().src = _ethernet_address;
+                temp_ether.header().dst = arp.sender_ethernet_address;
+                temp_ether.payload() = b->second.waiting_apply.front().serialize();
+                _frames_out.push(temp_ether);
+               
                 b -> second.waiting_apply.pop();
             }
 
@@ -120,9 +127,8 @@ optional<InternetDatagram> NetworkInterface::recv_frame(const EthernetFrame &fra
                 send_frame.header().type = EthernetHeader :: TYPE_ARP;
                 send_frame.header().src = _ethernet_address;
                 send_frame.header().dst = arp.sender_ethernet_address;
-                arp.target_ethernet_address = _ethernet_address;
+    
                 
-                send_frame.header() = frame.header();
                 send_frame.payload() = new_arp.serialize();
                 _frames_out.push(send_frame);
 
