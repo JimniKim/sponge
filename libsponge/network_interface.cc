@@ -77,7 +77,7 @@ void NetworkInterface::send_datagram(const InternetDatagram &dgram, const Addres
 //! \param[in] frame the incoming Ethernet frame
 optional<InternetDatagram> NetworkInterface::recv_frame(const EthernetFrame &frame) {
     
-    InternetDatagram result;
+    
     if (!(frame.header().dst == _ethernet_address ||frame.header().dst == ETHERNET_BROADCAST))
         return nullopt;
 
@@ -102,7 +102,7 @@ optional<InternetDatagram> NetworkInterface::recv_frame(const EthernetFrame &fra
             if (b!= already_sent_ARP.end())
             while (!(b -> second.waiting_apply.empty()))
             {
-                send_datagram (b->second.front(),arp.sender_ethernet_address);
+                send_datagram (b->second.waiting_apply.front(),arp.sender_ethernet_address);
                 b -> second.waiting_apply.pop();
             }
 

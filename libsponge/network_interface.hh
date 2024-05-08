@@ -43,14 +43,14 @@ class NetworkInterface {
 
     struct Ethernet_addr
     {
-        EthernetAddress ether;
-        size_t passing_time;
+        EthernetAddress ether{};
+        size_t passing_time = 0;
 
     };
     struct Sent_arp
     {
         std::queue<InternetDatagram> waiting_apply{};
-        size_t queue_time;
+        size_t queue_time = 0;
 
     };
 
