@@ -47,7 +47,7 @@ void NetworkInterface::send_datagram(const InternetDatagram &dgram, const Addres
     else
     {
         auto b = already_sent_ARP.find(next_hop_ip);
-        if (b != already_sent_ARP.end() && b->second.queue_time <= 5)
+        if (b != already_sent_ARP.end() && b->second.queue_time <= 5000)
             return;
         else if (b != already_sent_ARP.end())
             b->second.waiting_apply.push(dgram);
@@ -146,7 +146,7 @@ void NetworkInterface::tick(const size_t ms_since_last_tick)
     for (auto i = mapping.begin(); i != mapping.end();) 
     {
         i->second.passing_time += ms_since_last_tick;
-        if (i->second.passing_time >= 30)
+        if (i->second.passing_time >= 30000)
             i = mapping.erase(i);
         else 
             i++;
@@ -157,7 +157,7 @@ void NetworkInterface::tick(const size_t ms_since_last_tick)
     for (auto i =already_sent_ARP.begin(); i != already_sent_ARP.end();) 
     {
         i->second.queue_time += ms_since_last_tick;
-        if (i->second.queue_time >= 5)
+        if (i->second.queue_time >= 5000)
             i = already_sent_ARP.erase(i);
         else 
             i++;

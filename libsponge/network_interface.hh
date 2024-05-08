@@ -55,8 +55,8 @@ class NetworkInterface {
     };
 
 
-    map<uint32_t, Ethernet_addr> mapping{};
-    map<uint32_t, Sent_arp> already_sent_ARP{};
+    std::map<uint32_t, Ethernet_addr> mapping{};
+    std::map<uint32_t, Sent_arp> already_sent_ARP{};
 
   public:
     //! \brief Construct a network interface with given Ethernet (network-access-layer) and IP (internet-layer) addresses
