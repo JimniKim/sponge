@@ -49,7 +49,7 @@ class NetworkInterface {
     };
     struct Sent_arp
     {
-        std::queue<EthernetFrame> waiting_apply;
+        std::queue<InternetDatagram> waiting_apply{};
         size_t queue_time;
 
     };

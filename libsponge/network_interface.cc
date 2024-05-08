@@ -39,7 +39,7 @@ void NetworkInterface::send_datagram(const InternetDatagram &dgram, const Addres
     {
         send_frame.header().type = EthernetHeader :: TYPE_IPv4;
         send_frame.header().src = _ethernet_address;
-        send_frame.header().dst = a->second->ether;
+        send_frame.header().dst = a->second.ether;
         send_frame.payload() = dgram.serialize();
         _frames_out.push(send_frame);
         return;
@@ -47,9 +47,17 @@ void NetworkInterface::send_datagram(const InternetDatagram &dgram, const Addres
     else
     {
         auto b = already_sent_ARP.find(next_hop_ip);
-        if (b != mapping.end() && b->second.queue_time <= 5)
+        if (b != already_sent_ARP.end() && b->second.queue_time <= 5)
             return;
-        
+        else if (b != already_sent_ARP.end())
+            b->second.waiting_apply.push(dgram);
+        else if (b == already_sent_ARP.end())
+        {
+            Sent_arp temp;
+            temp.queue_time=0;
+            temp.waiting_apply.push(dgram);
+            already_sent_ARP.push({next_hop_ip, temp});
+        }
         send_frame.header().type = EthernetHeader :: TYPE_ARP;
         send_frame.header().src = _ethernet_address;
         send_frame.header().dst = ETHERNET_BROADCAST;
@@ -78,23 +86,48 @@ optional<InternetDatagram> NetworkInterface::recv_frame(const EthernetFrame &fra
         ARPMessage arp;
         if (arp.parse(Buffer(frame.payload())) == ParseResult::NoError)
         {
-            Ethernet_addr temp {arp.sender_ethernet_address, 0};
             auto a = mapping.find (arp.sender_ip_address);
             if (a != mapping.end())
             {
-                
+                a ->second.passing_time =0;
+                a ->second.ether = arp.sender_ethernet_address;
             }
-            mapping.push({arp.sender_ip_address, temp}); // for 30secs
+            else
+            {
+                Ethernet_addr temp {arp.sender_ethernet_address, 0};
+                mapping.push({arp.sender_ip_address, temp}); // for 30secs
+            }
             
-            if (arp.target_ip_address == _ip_address.ipv4_numeric())
+            auto b = already_sent_ARP.find(arp.sender_ip_address);
+            if (b!= already_sent_ARP.end())
+            while (!(b -> second.waiting_apply.empty()))
+            {
+                send_datagram (b->second.front(),arp.sender_ethernet_address);
+                b -> second.waiting_apply.pop();
+            }
+
+            if (arp.opcode == arp.OPCODE_REQUEST && arp.target_ip_address == _ip_address.ipv4_numeric())
+            {
+                EthernetFrame send_frame;
+                ARPMessage new_arp;
+                new_arp.opcode = new_arp.OPCODE_REPLY;
+                new_arp.sender_ip_address = _ip_address.ipv4_numeric();
+                new_arp.sender_ethernet_address = _ethernet_address;
+                new_arp.target_ip_address = arp.sender_ip_address;
+                new_arp.target_ethernet_address = arp.sender_ethernet_address;
+
+
+                send_frame.header().type = EthernetHeader :: TYPE_ARP;
+                send_frame.header().src = _ethernet_address;
+                send_frame.header().dst = arp.sender_ethernet_address;
                 arp.target_ethernet_address = _ethernet_address;
+                
+                send_frame.header() = frame.header();
+                send_frame.payload() = new_arp.serialize();
+                _frames_out.push(send_frame);
+
+            }
             
-            
-            EthernetFrame send_frame;
-            send_frame.header() = frame.header();
-            send_frame.payload() = arp.serialize();
-            if (result.parse(frame.payload()) == ParseResult::NoError)
-                return result;
         }
             
     }
