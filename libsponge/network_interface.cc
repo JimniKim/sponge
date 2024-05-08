@@ -55,7 +55,7 @@ void NetworkInterface::send_datagram(const InternetDatagram &dgram, const Addres
         EthernetFrame send_frame = create_ethernet_frame (ETHERNET_BROADCAST,EthernetHeader ::TYPE_ARP);
         send_frame.header().type = EthernetHeader ::TYPE_ARP;
 
-        ARPMessage arp = create_arp_msg(ARPMessage::OPCODE_REQUEST, next_hop_ip);
+        ARPMessage arp = create_arp_msg(ARPMessage::OPCODE_REQUEST, next_hop_ip, _ethernet_address);
 
         send_frame.payload() = arp.serialize();
         _frames_out.push(send_frame);
@@ -92,7 +92,7 @@ optional<InternetDatagram> NetworkInterface::recv_frame(const EthernetFrame &fra
             if (arp.opcode == arp.OPCODE_REQUEST && arp.target_ip_address == _ip_address.ipv4_numeric()) {
                 EthernetFrame send_frame = create_ethernet_frame(arp.sender_ethernet_address, EthernetHeader ::TYPE_ARP);
 
-                ARPMessage new_arp = create_arp_msg(new_arp.OPCODE_REPLY, arp.sender_ip_address, true, arp.sender_ethernet_address);
+                ARPMessage new_arp = create_arp_msg(new_arp.OPCODE_REPLY, arp.sender_ip_address, arp.sender_ethernet_address, true);
 
 
                 send_frame.payload() = new_arp.serialize();
@@ -137,7 +137,7 @@ EthernetFrame NetworkInterface:: create_ethernet_frame (const EthernetAddress & 
 
     return  new_ether;
 }
-ARPMessage NetworkInterface::create_arp_msg (uint16_t opcode, uint32_t target_ip, bool known = false, const EthernetAddress & target_ether= {})
+ARPMessage NetworkInterface::create_arp_msg (uint16_t opcode, uint32_t target_ip, const EthernetAddress & target_ether, bool known = false)
 {
     ARPMessage new_arp;
     new_arp.opcode = opcode;
