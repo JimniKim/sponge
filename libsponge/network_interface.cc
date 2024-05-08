@@ -34,15 +34,22 @@ void NetworkInterface::send_datagram(const InternetDatagram &dgram, const Addres
     const uint32_t next_hop_ip = next_hop.ipv4_numeric();
 
     EthernetFrame send_frame;
-
-    if (!dgram.header().dst) ///known
+    auto a = mapping.find(next_hop_ip);
+    if (a != mapping.end()) ///known
     {
         send_frame.header().type = EthernetHeader :: TYPE_IPv4;
+        send_frame.header().src = _ethernet_address;
+        send_frame.header().dst = a->second->ether;
         send_frame.payload() = dgram.serialize();
         _frames_out.push(send_frame);
+        return;
     }
     else
     {
+        auto b = already_sent_ARP.find(next_hop_ip);
+        if (b != mapping.end() && b->second.queue_time <= 5)
+            return;
+        
         send_frame.header().type = EthernetHeader :: TYPE_ARP;
         send_frame.header().src = _ethernet_address;
         send_frame.header().dst = ETHERNET_BROADCAST;
@@ -71,9 +78,17 @@ optional<InternetDatagram> NetworkInterface::recv_frame(const EthernetFrame &fra
         ARPMessage arp;
         if (arp.parse(Buffer(frame.payload())) == ParseResult::NoError)
         {
-            mapping.push({arp.sender_ip_address, arp.sender_ethernet_address}); // for 30secs
+            Ethernet_addr temp {arp.sender_ethernet_address, 0};
+            auto a = mapping.find (arp.sender_ip_address);
+            if (a != mapping.end())
+            {
+                
+            }
+            mapping.push({arp.sender_ip_address, temp}); // for 30secs
+            
             if (arp.target_ip_address == _ip_address.ipv4_numeric())
                 arp.target_ethernet_address = _ethernet_address;
+            
             
             EthernetFrame send_frame;
             send_frame.header() = frame.header();

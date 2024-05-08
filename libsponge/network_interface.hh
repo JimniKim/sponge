@@ -40,7 +40,23 @@ class NetworkInterface {
 
     //! outbound queue of Ethernet frames that the NetworkInterface wants sent
     std::queue<EthernetFrame> _frames_out{};
-    map<uint32_t, EthernetAddress> mapping{};
+
+    struct Ethernet_addr
+    {
+        EthernetAddress ether;
+        size_t passing_time;
+
+    };
+    struct Sent_arp
+    {
+        std::queue<EthernetFrame> waiting_apply;
+        size_t queue_time;
+
+    };
+
+
+    map<uint32_t, Ethernet_addr> mapping{};
+    map<uint32_t, Sent_arp> already_sent_ARP{};
 
   public:
     //! \brief Construct a network interface with given Ethernet (network-access-layer) and IP (internet-layer) addresses
