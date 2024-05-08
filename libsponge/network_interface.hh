@@ -5,9 +5,9 @@
 #include "tcp_over_ip.hh"
 #include "tun.hh"
 
+#include <map>
 #include <optional>
 #include <queue>
-#include <map>
 
 //! \brief A "network interface" that connects IP (the internet layer, or network layer)
 //! with Ethernet (the network access layer, or link layer).
@@ -41,19 +41,14 @@ class NetworkInterface {
     //! outbound queue of Ethernet frames that the NetworkInterface wants sent
     std::queue<EthernetFrame> _frames_out{};
 
-    struct Ethernet_addr
-    {
+    struct Ethernet_addr {
         EthernetAddress ether{};
         size_t passing_time = 0;
-
     };
-    struct Sent_arp
-    {
+    struct Sent_arp {
         std::queue<InternetDatagram> waiting_apply{};
         size_t queue_time = 0;
-
     };
-
 
     std::map<uint32_t, Ethernet_addr> mapping{};
     std::map<uint32_t, Sent_arp> already_sent_ARP{};
