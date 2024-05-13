@@ -29,14 +29,32 @@ void Router::add_route(const uint32_t route_prefix,
     cerr << "DEBUG: adding route " << Address::from_ipv4_numeric(route_prefix).ip() << "/" << int(prefix_length)
          << " => " << (next_hop.has_value() ? next_hop->ip() : "(direct)") << " on interface " << interface_num << "\n";
 
-    DUMMY_CODE(route_prefix, prefix_length, next_hop, interface_num);
-    // Your code here.
+    Router_mem temp;
+    temp.route_prefix = route_prefix;
+    temp.prefix_length = prefix_length;
+    temp.next_hop = next_hop;
+    temp.interface_num = interface_num;
+    
+    router_list.push_back(temp);
+
+
 }
 
 //! \param[in] dgram The datagram to be routed
 void Router::route_one_datagram(InternetDatagram &dgram) {
-    DUMMY_CODE(dgram);
-    // Your code here.
+    std::list <Router_mem> matched_list;
+    for (auto i = router_list.begin(); i != router_list.end();i++)
+    {
+        if (dgram.header().dst == i->route_prefix) // Something to fix!!
+            matched_list.push_back(*i);
+        
+    }
+    if (matched_list.empty() || dgram.header().ttl ==0 || --(dgram.header().ttl))
+        return;
+    
+    Router_mem longest = matched_list.sort().front();  // Something to fix!!
+    interface(longest.interface_num).send_datagram(dgram,longest.next_hop);
+     
 }
 
 void Router::route() {
