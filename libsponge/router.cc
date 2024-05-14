@@ -29,7 +29,9 @@ void Router::add_route(const uint32_t route_prefix,
     cerr << "DEBUG: adding route " << Address::from_ipv4_numeric(route_prefix).ip() << "/" << int(prefix_length)
          << " => " << (next_hop.has_value() ? next_hop->ip() : "(direct)") << " on interface " << interface_num << "\n";
     
-    Router_mem temp {route_prefix, prefix_length, next_hop.value(), interface_num, next_hop.has_value()};
+    Router_mem temp {route_prefix, prefix_length, next_hop.has_value() ? next_hop.value().ipv4_numeric() : 0, interface_num, next_hop.has_value()};
+    //cout <<"route_prefix: " <<route_prefix <<"\n";
+    //cout <<"prefix_length: "<< int(prefix_length) << "\n";
     //if (next_hop.has_value())
     //    temp = Router_mem{route_prefix, prefix_length, next_hop.ipv4_numeric(), interface_num,false};
     //else 
@@ -39,27 +41,55 @@ void Router::add_route(const uint32_t route_prefix,
 
 //! \param[in] dgram The datagram to be routed
 void Router::route_one_datagram(InternetDatagram &dgram) {
-    std::list <Router_mem> matched_list;
+    std::list <Router_mem> matched_list{};
+    int max_length = -1;
+    uint32_t next_ip =0;
+    bool next_hop_empty = false;
     for (auto i = router_list.begin(); i != router_list.end();i++)
     {
-        uint32_t prefix = dgram.header().dst >> (32 - i->prefix_length);
-        if (prefix == i->route_prefix) 
-            matched_list.push_back(*i);
+        uint8_t length = i->prefix_length;
+        uint32_t prefix = length ? (dgram.header().dst >> (32 - length))<<(32 - length) : 0;
+        
+        uint32_t route_prefix = (i->route_prefix >> (32 - length))<<(32 - length);
+
+        cout << "prefix: " << Address::from_ipv4_numeric(prefix).ip() << " " 
+        << "i->route_prefix: " << Address::from_ipv4_numeric(i->route_prefix).ip() <<" " 
+        "i->prefix_length: " << int(i->prefix_length) << "\n";
+        cout << "route_prefix: " <<Address::from_ipv4_numeric (route_prefix).ip()<<"\n";
+        if (prefix == i->route_prefix && max_length <= i-> prefix_length) 
+        {
+            cout << "match!" <<"prefix: " << Address::from_ipv4_numeric(prefix).ip() << " " 
+        << "i->route_prefix: " << Address::from_ipv4_numeric(i->route_prefix).ip() <<" " 
+        "i->prefix_length: " << int(i->prefix_length) << "\n";
+            cout << "route_prefix: " <<Address::from_ipv4_numeric (route_prefix).ip()<<"\n"; 
+            max_length = i-> prefix_length;
+            next_ip = i -> next_hop_ip;
+            Router_mem temp = *i;
+            matched_list.push_back(temp);
+            next_hop_empty = i -> next_hop_empty;
+        }
         
     }
-    if (matched_list.empty() || dgram.header().ttl ==0 || --(dgram.header().ttl))
+    cout << "\n\n";
+    cout << "max_length: " <<max_length<< " next_ip: " <<Address::from_ipv4_numeric(next_ip).ip()
+    <<" next_hop_empty: " << next_hop_empty <<"\n";
+    cout << "matched_list.empty(): " <<matched_list.empty() << " dgram.header().ttl: " << int(dgram.header().ttl)<<"\n";
+    if (max_length == -1 || matched_list.empty() || dgram.header().ttl <= 1)
         return;
-    
-    if (!matched_list.empty())
+    --(dgram.header().ttl);
+    cout << " dgram.header().ttl: " << dgram.header().ttl<<"\n";
+    if ( max_length != -1||!matched_list.empty())
     {
         Router_mem longest = matched_list.front();
         for (auto i = matched_list.begin(); i != matched_list.end(); i++)
             if (longest.prefix_length < i->prefix_length)
                 longest = *i;
-
-        if (longest.next_hop_empty)
-            interface(longest.interface_num).send_datagram(dgram,longest.next_hop);
+        cout << "longest.interface_num: " <<longest.interface_num<<'\n';
+        //if (longest.next_hop_empty)
+        if (next_hop_empty)
+            interface(longest.interface_num).send_datagram(dgram,Address::from_ipv4_numeric(next_ip));
             //interface(longest.interface_num).send_datagram(dgram,Address::from_ipv4_numeric(longest.next_hop_ip));
+           
         else
             interface(longest.interface_num).send_datagram(dgram,Address::from_ipv4_numeric(dgram.header().dst));
     }

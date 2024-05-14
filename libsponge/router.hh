@@ -54,8 +54,7 @@ class Router {
     {
         uint32_t route_prefix;
         uint8_t prefix_length;
-        Address next_hop;
-        //uint32_t next_hop_ip;
+        uint32_t next_hop_ip;
         size_t interface_num;
         bool next_hop_empty;
     };
