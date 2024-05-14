@@ -52,10 +52,10 @@ class Router {
     
     struct Router_mem
     {
-        const uint32_t route_prefix;
-        const uint8_t prefix_length;
-        const optional<Address> next_hop;
-        const size_t interface_num;
+        const uint32_t route_prefix =0;
+        const uint8_t prefix_length =0;
+        const optional<Address> next_hop = nullopt;
+        const size_t interface_num =0;
     };
     std::list <Router_mem> router_list;
     bool Compare_length (const Router_mem & a, const Router_mem & b)

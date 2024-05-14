@@ -29,15 +29,8 @@ void Router::add_route(const uint32_t route_prefix,
     cerr << "DEBUG: adding route " << Address::from_ipv4_numeric(route_prefix).ip() << "/" << int(prefix_length)
          << " => " << (next_hop.has_value() ? next_hop->ip() : "(direct)") << " on interface " << interface_num << "\n";
 
-    Router_mem temp;
-    temp.route_prefix = route_prefix;
-    temp.prefix_length = prefix_length;
-    temp.next_hop = next_hop;
-    temp.interface_num = interface_num;
-    
+    Router_mem temp {route_prefix, prefix_length, next_hop, interface_num};
     router_list.push_back(temp);
-
-
 }
 
 //! \param[in] dgram The datagram to be routed
