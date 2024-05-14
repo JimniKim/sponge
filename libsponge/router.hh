@@ -52,10 +52,10 @@ class Router {
     
     struct Router_mem
     {
-        const uint32_t route_prefix;
-        const uint8_t prefix_length;
-        const Address next_hop;
-        const size_t interface_num;
+        uint32_t route_prefix;
+        uint8_t prefix_length;
+        Address next_hop;
+        size_t interface_num;
     };
     std::list <Router_mem> router_list;
 
