@@ -46,8 +46,16 @@ void Router::route_one_datagram(InternetDatagram &dgram) {
     if (matched_list.empty() || dgram.header().ttl ==0 || --(dgram.header().ttl))
         return;
     
-    Router_mem longest = matched_list.sort(Compare_length).front();  
-    interface(longest.interface_num).send_datagram(dgram,longest.next_hop);
+    if (!matched_list.empty())
+    {
+        Router_mem longest = matched_list.front();
+        for (auto i = matched_list.begin(); i != matched_list.end(); i++)
+            if (longest.prefix_length < i->prefix_length)
+                longest = *i;
+            
+        interface(longest.interface_num).send_datagram(dgram,longest.next_hop);
+    }
+    
      
 }
 
