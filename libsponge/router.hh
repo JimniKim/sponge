@@ -54,11 +54,12 @@ class Router {
     {
         uint32_t route_prefix;
         uint8_t prefix_length;
-        uint32_t next_hop_ip;
+        Address next_hop;
+        //uint32_t next_hop_ip;
         size_t interface_num;
         bool next_hop_empty;
     };
-    std::list <Router_mem> router_list;
+    std::list <Router_mem> router_list{};
 
   public:
     //! Add an interface to the router
