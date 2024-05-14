@@ -45,14 +45,15 @@ void Router::route_one_datagram(InternetDatagram &dgram) {
     std::list <Router_mem> matched_list;
     for (auto i = router_list.begin(); i != router_list.end();i++)
     {
-        if (dgram.header().dst == i->route_prefix) // Something to fix!!
+        uint32_t prefix = dgram.header().dst >> (32 - i->prefix_length);
+        if (prefix == i->route_prefix) 
             matched_list.push_back(*i);
         
     }
     if (matched_list.empty() || dgram.header().ttl ==0 || --(dgram.header().ttl))
         return;
     
-    Router_mem longest = matched_list.sort().front();  // Something to fix!!
+    Router_mem longest = matched_list.sort(Compare_length).front();  
     interface(longest.interface_num).send_datagram(dgram,longest.next_hop);
      
 }

@@ -58,6 +58,10 @@ class Router {
         const size_t interface_num;
     };
     std::list <Router_mem> router_list;
+    bool Compare_length (const Router_mem & a, const Router_mem & b)
+    {
+        return a.prefix_length > b.prefix_length;
+    }
 
   public:
     //! Add an interface to the router
