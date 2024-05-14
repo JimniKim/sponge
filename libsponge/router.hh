@@ -3,9 +3,9 @@
 
 #include "network_interface.hh"
 
+#include <list>
 #include <optional>
 #include <queue>
-#include <list>
 
 //! \brief A wrapper for NetworkInterface that makes the host-side
 //! interface asynchronous: instead of returning received datagrams
@@ -49,16 +49,15 @@ class Router {
     //! as specified by the route with the longest prefix_length that matches the
     //! datagram's destination address.
     void route_one_datagram(InternetDatagram &dgram);
-    
-    struct Router_mem
-    {
+
+    struct Router_mem {
         uint32_t route_prefix;
         uint8_t prefix_length;
         uint32_t next_hop_ip;
         size_t interface_num;
         bool next_hop_empty;
     };
-    std::list <Router_mem> router_list{};
+    std::list<Router_mem> router_list{};
 
   public:
     //! Add an interface to the router
